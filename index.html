@@ -46,6 +46,38 @@ h2,h3,h4{margin:0;text-wrap:balance}
 .layout{width:100%;max-width:1000px;margin:0 auto}
 .top-actions{display:flex;gap:8px;flex-wrap:wrap}
 .top-actions .btn{display:inline-flex;align-items:center;gap:8px;position:relative}
+.icon-btn{padding:8px 10px;display:inline-flex;align-items:center}
+.icon-btn[aria-pressed="false"]{background:var(--muted);color:var(--ink-2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.studio{display:flex;flex-direction:column;gap:6px}
+.studio h4{font-family:var(--f-display);font-weight:400;font-size:13px;letter-spacing:.04em;margin-top:8px}
+.srow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;border:2px solid var(--muted);border-radius:10px;padding:6px 8px}
+.sname{flex:1 1 160px;min-width:0;display:flex;flex-direction:column;font-size:14px}
+.stag{font-size:11px;font-weight:800;color:var(--ink-2);overflow-wrap:anywhere}
+.stag.mine{color:var(--teal)}
+.stag.pack{color:var(--sky)}
+.share{border:2px dashed var(--ink-2);border-radius:12px;padding:10px 12px}
+.share summary{cursor:pointer;font-weight:900}
+.share ol{margin:8px 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.share textarea{width:100%;min-height:96px;font:12px var(--f-num);border:2px solid var(--ink);border-radius:8px;padding:6px;background:var(--card);color:var(--ink);resize:vertical}
+.share code{font-family:var(--f-num);font-size:.92em;background:var(--muted);padding:0 4px;border-radius:4px}
+.ptopics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.ptopic{border:2px solid var(--ink);border-radius:12px;background:var(--card);padding:8px 10px;text-align:left;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 8px;align-items:center;color:var(--ink);font:inherit}
+.ptopic .swatch{grid-row:span 2}
+.ptopic b{font-size:14px;line-height:1.2}
+.ptopic .small{grid-column:2;font-size:12px}
+.ptopic[aria-pressed="true"]{background:#fff6dd;box-shadow:3px 3px 0 var(--ink)}
+.psubs button{font-size:13px}
+.psubs .pct{font-size:11px;font-weight:700;opacity:.75;margin-left:2px}
+.pr-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.pr-bar{flex:1 1 160px;width:auto}
+.pr-score{display:flex;align-items:center;gap:14px}
+.pr-score .num{font-family:var(--f-display);font-size:34px;line-height:1}
+.pr-score .bar{flex:1;height:16px;width:auto}
+.pr-subs{display:flex;flex-direction:column;gap:6px}
+.pr-subs .skill{grid-template-columns:minmax(0,1fr) 70px 46px}
+.snd-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.snd-row input[type=range]{flex:1 1 120px;min-width:0;accent-color:var(--teal)}
 .dot{position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:var(--coral);border:2px solid var(--ink)}
 .drawer-veil{position:fixed;inset:0;background:var(--veil);z-index:55}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--paper);border-left:2px solid var(--ink);z-index:60;display:flex;flex-direction:column;gap:12px;overflow-y:auto;padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));padding-left:16px;padding-right:max(16px,env(safe-area-inset-right,0px));animation:slide .22s ease-out}
@@ -239,6 +271,8 @@ details ul{padding-left:18px}
 .qtable th{background:var(--muted);font-weight:800;text-align:left}
 .qtable thead th{text-align:center}
 .colvec{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;border-left:2px solid currentColor;border-right:2px solid currentColor;border-radius:7px;padding:0 6px;line-height:1.15;font-family:var(--f-num);font-size:.82em;margin:0 3px}
+.chip.word{background:var(--teal);color:#fff}
+.q-text.wordy{font-size:17px;font-weight:700;line-height:1.55;max-width:62ch}
 .hint{background:#fff6dd;border:2px solid var(--gold);border-radius:10px;padding:8px 10px;font-weight:700}
 .fb{border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .fb:empty{display:none}
@@ -306,6 +340,8 @@ img,svg{max-width:100%}
     <div class="hud" id="hud"></div>
     <div class="top-actions">
       <button class="btn primary" id="hallBtn" type="button">Challenges <span class="num" id="starCount">0★</span><span class="dot" id="hallDot" hidden></span></button>
+      <button class="btn" id="practiceBtn" type="button">Practice</button>
+      <button class="btn icon-btn" id="sndBtn" type="button" aria-pressed="true"></button>
       <button class="btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="drawer">Menu</button>
     </div>
   </header>
@@ -333,14 +369,18 @@ img,svg{max-width:100%}
       <section class="panel" id="helpPanel">
           <h3>How to play</h3>
           <ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">
-            <li>Roll the die and your hero moves that many spaces. Only the space you stop on counts.</li><li>With Lucky skips on, rolling a 5 or 6 lets you skip a battle, trap, quest or blitz. Guardians can never be skipped.</li>
+            <li>Roll the die and your hero moves that many spaces. Only the space you stop on counts.</li>
+            <li>Things going wrong send you back: running away or failing a trap returns you to the space you came from, a failed quest (fewer than 2 right) does the same, and being knocked out sends you back to the camp at the start of the level.</li><li>With Lucky skips on, rolling a 5 or 6 lets you skip a battle, trap, quest or blitz. Guardians can never be skipped.</li>
             <li>Every encounter is won by solving maths. Wrong answers show the full working so you learn from them.</li>
             <li>Get answers right in a row to build a combo. Combos make your attacks stronger.</li>
             <li>Each region ends with a Guardian. Defeat it to open the next region.</li>
             <li>Type fractions like <span class="num">3/4</span>. Units and £ signs are optional.</li>
             <li>Beat a Guardian to unlock that region in the Challenge Hall. Each challenge earns up to 3 stars, so there is always a better score to chase.</li>
             <li>Bounties in the Challenge Hall refresh as you complete them.</li>
+            <li>Want extra practice? The Practice room lets you pick any topic or subtopic, choose word problems or quick questions, and practise with free hints and no monsters. The Skill book suggests what to practise next.</li>
+            <li>Quests and treasure chests often use word problems: read the story, pick out the numbers, then work step by step.</li>
             <li>From any camp you can fast travel back to earlier regions. Chests in cleared regions refill each time you return.</li>
+            <li>Music loops all through the game and gets quieter whenever a sound effect plays. Tap the speaker button at the top to mute everything. Change effects and music separately, or choose your own sounds, in Menu → Hero.</li>
             <li>Progress saves in this browser automatically.</li>
           </ul>
       </section>
@@ -364,6 +404,87 @@ const fr=(n,d)=>`<span class="frac"><span>${n}</span><span>${d}</span></span>`;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+/* ---------------- Sound (synthesised in the browser, no audio files) ---------------- */
+const SND={muted:false,sfx:true,music:true,fxVol:80,musVol:45,duck:true,battleMusic:false};
+try{const sv=JSON.parse(localStorage.getItem('numeria-sound')||'{}');if(sv.vol!=null&&sv.fxVol==null)sv.fxVol=sv.vol;delete sv.vol;Object.assign(SND,sv);}catch(e){}
+const saveSnd=()=>{try{localStorage.setItem('numeria-sound',JSON.stringify(SND));}catch(e){}};
+const ACtx=window.AudioContext||window.webkitAudioContext;let ac=null,mGain=null,fxGain=null,musGain=null,duckG=null,noiseBuf=null;
+function actx(){if(!ACtx)return null;try{if(!ac){ac=new ACtx();mGain=ac.createGain();mGain.gain.value=SND.muted?0:1;mGain.connect(ac.destination);fxGain=ac.createGain();fxGain.gain.value=SND.fxVol/100;fxGain.connect(mGain);duckG=ac.createGain();duckG.connect(mGain);musGain=ac.createGain();musGain.gain.value=SND.musVol/100;musGain.connect(duckG);
+ noiseBuf=ac.createBuffer(1,ac.sampleRate,ac.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}
+ if(ac.state==='suspended')ac.resume();}catch(e){return null;}return ac;}
+function tone(f,dur,o={}){const t=ac.currentTime+Math.max(0,o.at||0),os=ac.createOscillator(),g=ac.createGain(),v=o.vol??.3;os.type=o.type||'triangle';os.frequency.setValueAtTime(f,t);if(o.to)os.frequency.exponentialRampToValueAtTime(o.to,t+dur);
+ g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+(o.attack??.005));g.gain.exponentialRampToValueAtTime(.0001,t+dur);os.connect(g);g.connect(o.dest||fxGain);os.start(t);os.stop(t+dur+.03);}
+function noise(dur,o={}){const t=ac.currentTime+Math.max(0,o.at||0),src=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain(),v=o.vol??.3;src.buffer=noiseBuf;f.type=o.filter||'lowpass';f.frequency.setValueAtTime(o.freq||1200,t);if(o.to)f.frequency.exponentialRampToValueAtTime(o.to,t+dur);f.Q.value=o.q||1;
+ g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+(o.attack??.005));g.gain.exponentialRampToValueAtTime(.0001,t+dur);src.connect(f);f.connect(g);g.connect(fxGain);src.start(t,Math.random()*.5);src.stop(t+dur+.03);}
+const arp=(notes,step,o={})=>notes.forEach((f,i)=>tone(f,o.dur||step*1.6,{...o,at:(o.at||0)+i*step}));
+const SFX={
+ click:()=>tone(660,.05,{type:'square',vol:.04}),
+ dice:()=>{for(let i=0;i<7;i++)noise(.035,{at:i*.07+Math.random()*.02,filter:'bandpass',freq:2200+Math.random()*1500,q:2,vol:.35});},
+ thud:()=>{tone(180,.12,{to:70,type:'sine',vol:.35});noise(.06,{freq:600,vol:.2});},
+ step:(i=0)=>tone(330*2**(i/12),.07,{to:262*2**(i/12),type:'triangle',vol:.18}),
+ correct:()=>arp([523,659,784],.07,{type:'triangle',vol:.22}),
+ wrong:()=>{tone(233,.18,{to:207,type:'sawtooth',vol:.1});tone(196,.3,{at:.16,to:147,type:'sawtooth',vol:.1});},
+ sword:()=>{noise(.22,{filter:'highpass',freq:1500,to:6000,vol:.25,attack:.04});tone(1760,.25,{at:.05,type:'sine',vol:.06});},
+ fire:()=>{noise(.45,{filter:'lowpass',freq:300,to:1800,vol:.35,attack:.08});tone(110,.4,{to:220,type:'sawtooth',vol:.05});},
+ bigfire:()=>{noise(.7,{filter:'lowpass',freq:200,to:900,vol:.5,attack:.1});tone(70,.7,{to:45,type:'sawtooth',vol:.12});},
+ arrow:()=>{tone(440,.12,{to:220,type:'triangle',vol:.22});noise(.25,{at:.03,filter:'bandpass',freq:3000,to:1200,q:1.5,vol:.18,attack:.03});},
+ orb:()=>{tone(300,.35,{to:720,type:'sine',vol:.15,attack:.05});tone(450,.35,{to:1080,type:'sine',vol:.07,attack:.05});},
+ hit:()=>{noise(.14,{freq:1800,to:300,vol:.35});tone(160,.18,{to:55,type:'sine',vol:.4});},
+ hurt:()=>{tone(392,.2,{to:130,type:'square',vol:.11});noise(.12,{freq:900,vol:.2});},
+ block:()=>{tone(1320,.45,{type:'sine',vol:.15});tone(1980,.35,{type:'sine',vol:.08});noise(.05,{filter:'highpass',freq:3000,vol:.15});},
+ victory:()=>{arp([523,659,784],.1,{type:'square',vol:.09});tone(1047,.5,{at:.3,type:'square',vol:.09});tone(784,.5,{at:.3,type:'triangle',vol:.14});},
+ fanfare:()=>{const n=[392,392,392,523,659,784,1047],ts=[0,.12,.24,.4,.6,.8,1];n.forEach((f,i)=>tone(f,i===6?.9:.18,{at:ts[i],type:'square',vol:.09}));[262,330,392].forEach(f=>tone(f,1,{at:1,type:'triangle',vol:.11}));},
+ defeat:()=>[392,370,349,262].forEach((f,i)=>tone(f,i===3?.7:.28,{at:i*.28,type:'triangle',vol:.2})),
+ levelup:()=>{arp([523,659,784,1047,1319],.06,{type:'square',vol:.07});arp([1568,2093],.08,{at:.32,type:'sine',vol:.12,dur:.4});},
+ coin:()=>{tone(988,.08,{type:'square',vol:.08});tone(1319,.35,{at:.08,type:'square',vol:.08});},
+ chest:()=>{tone(110,.35,{to:190,type:'sawtooth',vol:.06,attack:.05});arp([784,988,1175,1568],.06,{at:.3,type:'sine',vol:.15,dur:.4});},
+ achieve:()=>arp([1047,1319,1568,2093],.09,{type:'sine',vol:.13,dur:.8}),
+ secret:()=>arp([784,1175,1568,1175,1568,2349],.07,{type:'sine',vol:.12,dur:.6}),
+ star:(n=1)=>{for(let i=0;i<n;i++){tone(1568*2**(i*4/12),.5,{at:i*.25,type:'sine',vol:.14});tone(2093*2**(i*4/12),.5,{at:i*.25+.05,type:'sine',vol:.07});}},
+ tick:()=>tone(1200,.04,{type:'sine',vol:.12}),
+ buzzer:()=>{tone(180,.5,{type:'square',vol:.09});tone(185,.5,{type:'square',vol:.09});},
+ drink:()=>{for(let i=0;i<6;i++)tone(300+Math.random()*500,.08,{at:i*.07,to:700+Math.random()*500,type:'sine',vol:.12});},
+ heal:()=>arp([523,784,1047],.08,{type:'sine',vol:.12,dur:.5}),
+ lucky:()=>arp([1319,1568,1976,2637],.05,{type:'sine',vol:.1,dur:.3}),
+ warp:()=>{tone(200,.6,{to:1600,type:'sine',vol:.15});noise(.6,{filter:'bandpass',freq:500,to:4000,q:3,vol:.15});},
+ flee:()=>{arp([659,523,392,262],.06,{type:'triangle',vol:.15});noise(.3,{filter:'highpass',freq:4000,to:800,vol:.1});},
+ trap:()=>{noise(.3,{freq:500,to:150,vol:.4});tone(90,.3,{to:50,type:'sawtooth',vol:.1});},
+ giggle:()=>{for(let i=0;i<5;i++)tone(700+i*60,.07,{at:i*.09,to:900+i*60,type:'square',vol:.06});}
+};
+/* custom sounds: "mine" = uploaded on this device, "pack" = sounds folder on the website */
+const MINE={},PACK={};let idb=null,dctx=null,musSrc=null,previewKey=null;
+function playBuf(buf,o={}){const sN=ac.createBufferSource(),g=ac.createGain();sN.buffer=buf;sN.playbackRate.value=o.rate||1;sN.loop=!!o.loop;g.gain.value=o.vol??1;sN.connect(g);g.connect(o.dest||fxGain);sN.start();return sN;}
+function playSound(name,...a){if(!actx())return;const c=MINE[name]||PACK[name];try{if(c){duck(name,c.buf.duration);playBuf(c.buf,{rate:name==='step'?2**((a[0]||0)/12):1});return;}if(SFX[name]){duck(name,name==='star'?.5+.25*(a[0]||1):0);SFX[name](...a);}}catch(e){}}
+function sfx(name,...a){if(SND.muted||!SND.sfx)return;playSound(name,...a);}
+/* background music: short chiptune loops */
+const MIDI=n=>440*2**((n-69)/12);
+const SONGS={
+ map:{bpm:92,lt:'triangle',bt:'triangle',lead:[72,0,76,79,76,0,74,72,69,0,72,74,72,0,0,0,72,0,76,79,81,0,79,76,74,0,76,74,72,0,0,0,76,0,79,81,79,0,76,74,72,0,74,76,74,0,0,0,77,0,76,74,72,0,69,72,74,0,72,71,72,0,0,0],bass:[48,0,55,0,45,0,52,0,41,0,48,0,43,0,50,0,48,0,55,0,45,0,52,0,41,0,43,0,48,0,0,0,45,0,52,0,41,0,48,0,38,0,45,0,43,0,50,0,41,0,48,0,45,0,52,0,43,0,47,0,48,0,0,0]},
+ battle:{bpm:150,lt:'square',bt:'triangle',lead:[69,72,76,72,69,72,76,79,77,76,74,72,74,72,71,0,69,72,76,72,69,72,76,81,79,77,76,74,76,0,76,0],bass:[45,45,57,45,45,45,57,45,41,41,53,41,43,43,55,43,45,45,57,45,45,45,57,45,41,41,53,41,40,40,52,40]},
+ boss:{bpm:168,lt:'sawtooth',bt:'square',lead:[64,0,67,64,70,0,69,67,64,0,67,64,63,0,62,0,64,0,67,64,70,0,72,70,69,67,65,64,63,0,64,0],bass:[40,40,52,40,40,40,52,40,38,38,50,38,39,39,51,39,40,40,52,40,40,40,52,40,36,36,48,36,35,35,47,35]}
+};
+let musKey=null,musTimer=null,musStep=0,musNext=0,wantMusic='map';
+/* ducking: music dips while a sound effect plays, then fades back up */
+const DUCK={click:0,step:0,tick:0,thud:0,dice:.7,lucky:.6,correct:.5,wrong:.5,sword:.55,fire:.5,bigfire:.35,arrow:.55,orb:.55,hit:.5,hurt:.5,block:.5,victory:.25,fanfare:.2,defeat:.25,levelup:.25,coin:.55,chest:.35,achieve:.3,secret:.3,star:.3,buzzer:.35,drink:.55,heal:.45,trap:.45,warp:.45,flee:.45,giggle:.55};
+const DUCKT={dice:.55,victory:.9,fanfare:2,defeat:1.4,levelup:.8,chest:.8,achieve:1.1,secret:1,buzzer:.6,bigfire:.8,fire:.5,warp:.7,heal:.6,drink:.5};
+let duckEnd=0,duckLvl=1;
+function duck(name,dur){if(!SND.duck||!duckG||(!musTimer&&!musSrc))return;const lv=DUCK[name]??.45;if(!lv)return;const now=ac.currentTime,hold=Math.min(Math.max(dur||DUCKT[name]||.35,.2),6);
+ if(now>duckEnd)duckLvl=1;duckLvl=Math.min(duckLvl,lv);duckEnd=Math.max(duckEnd,now+hold);const g=duckG.gain;try{g.cancelScheduledValues(now);g.setValueAtTime(g.value,now);g.setTargetAtTime(duckLvl,now,.03);g.setTargetAtTime(1,duckEnd,.25);}catch(e){}}
+function stopMusic(){if(musTimer){clearInterval(musTimer);musTimer=null;}if(musSrc){try{musSrc.stop();}catch(e){}musSrc=null;}}
+function setMusic(k){if(musKey===k&&(musTimer||musSrc))return;stopMusic();musKey=k;if(!k||!actx())return;const cm=MINE['music_'+k]||PACK['music_'+k];if(cm){try{musSrc=playBuf(cm.buf,{loop:true,dest:musGain,vol:.6});}catch(e){}return;}musStep=0;musNext=ac.currentTime+.08;
+ musTimer=setInterval(()=>{const sg=SONGS[musKey];if(!sg||!ac)return;const dt=60/sg.bpm/2;if(musNext<ac.currentTime)musNext=ac.currentTime+.02;
+  while(musNext<ac.currentTime+.15){const i=musStep%sg.lead.length,L=sg.lead[i],B=sg.bass[i%sg.bass.length],at=musNext-ac.currentTime;
+   if(L)tone(MIDI(L),dt*.9,{at,type:sg.lt,vol:sg.lt==='triangle'?.09:.045,dest:musGain});if(B)tone(MIDI(B),dt*.95,{at,type:sg.bt,vol:sg.bt==='triangle'?.12:.04,dest:musGain});
+   musNext+=dt;musStep++;}},25);}
+function music(k){wantMusic=k;const key=SND.battleMusic?k:'map';setMusic(!SND.muted&&SND.music?key:null);}
+function applySound(){if(mGain){mGain.gain.value=SND.muted?0:1;fxGain.gain.value=SND.fxVol/100;musGain.gain.value=SND.musVol/100;}music(wantMusic);saveSnd();renderSndBtn();}
+const SPK='<path d="M3 9 H7 L12 5 V19 L7 15 H3 Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>';
+function renderSndBtn(){const b=document.getElementById('sndBtn');if(!b)return;b.setAttribute('aria-pressed',String(!SND.muted));b.title=SND.muted?'Sound is off. Tap to turn on.':'Sound is on. Tap to mute.';
+ b.innerHTML=`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">${SPK}${SND.muted?'<path d="M16 9 L22 15 M22 9 L16 15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>':'<path d="M15.5 9 Q17.5 12 15.5 15 M18.5 6.5 Q22.5 12 18.5 17.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'}</svg><span class="sr">${SND.muted?'Unmute':'Mute'}</span>`;}
+document.addEventListener('pointerdown',()=>{if(!SND.muted&&(SND.sfx||SND.music)){actx();if(SND.music&&!musTimer&&!musSrc)music(wantMusic);}},{capture:true});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b&&b.type!=='submit'&&b.id!=='rollBtn'&&b.id!=='sndBtn'&&!b.classList.contains('die'))sfx('click');});
+document.addEventListener('visibilitychange',()=>{if(!ac)return;try{document.hidden?ac.suspend():ac.resume();}catch(e){}});
 const hash=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h;};
 
 /* ---------------- World data ---------------- */
@@ -400,7 +521,8 @@ const ACH={
  champ:['Champion of Numeria','Defeat the Infinity Dragon'],
  stars10:['Star Collector','Earn 10 challenge stars'],
  stars45:['Hall of Fame','Earn 45 challenge stars'],
- bounty5:['Bounty Hunter','Complete 5 bounties']
+ bounty5:['Bounty Hunter','Complete 5 bounties'],
+ practice:['Keen Learner','Finish a practice session of 10 or more questions']
 };
 const PRAISE=['Correct!','Spot on!','Brilliant!','Nailed it!','Exactly right!','Great work!'];
 
@@ -750,8 +872,172 @@ stats:[
 ]
 };
 for(const t in GUIDE)GEN[t].push(...GUIDE[t]);
+/* ---------------- Word problems ----------------
+   Multi-step, real-life questions. Each uses a subtopic name so it counts in the skill book. */
+const NAMES=['Amara','Jay','Priya','Tomasz','Chloe','Kwame','Aisha','Liam','Mei','Ollie','Zara','Dev','Fatima','Ryan','Sofia','Ade','Hassan','Ella'];
+const nm=()=>P(NAMES);
+const two=()=>{const a=nm();let b;do{b=nm();}while(b===a);return [a,b];};
+const gbp=x=>'£'+(Number.isInteger(+(+x).toFixed(2))?String(Math.round(x)):(+x).toFixed(2));
+const WORD={
+number:[
+ lv=>{const N=nm(),k=R(2,lv===1?3:5),p=R(65,lv===1?250:399)/100,q=R(80,450)/100,item=P([['notebooks','a pen'],['bottles of water','a sandwich'],['cupcakes','a drink'],['bus tickets','a magazine']]),sub_=+(k*p).toFixed(2),tot=+(sub_+q).toFixed(2),note=tot<5?5:tot<10?10:tot<20?20:50,ch=+(note-tot).toFixed(2);
+  return {sub:'Money problems',text:`${N} buys ${k} ${item[0]} at £${p.toFixed(2)} each and ${item[1]} for £${q.toFixed(2)}. ${N} pays with a £${note} note. How much change should ${N} get?`,ans:ch,show:'£'+ch.toFixed(2),exp:`Cost of the ${item[0]}: ${k} × £${p.toFixed(2)} = £${sub_.toFixed(2)}. Add ${item[1]}: £${sub_.toFixed(2)} + £${q.toFixed(2)} = £${tot.toFixed(2)}. Change: £${note} − £${tot.toFixed(2)} = £${ch.toFixed(2)}.`,hint:'Find the total cost first, then take it away from the note.'};},
+ lv=>{const N=nm();if(lv<3){const r=P([10.5,11,11.25,11.5,12,12.25,12.5,13]),h=R(3,8),d=R(2,5),pay=+(r*h*d).toFixed(2);
+   return {sub:'Money problems',text:`${N} has a part-time job paying £${r.toFixed(2)} an hour. ${N} works ${h} hours a day, ${d} days a week. How much does ${N} earn in a week?`,ans:pay,show:gbp(pay),exp:`Hours in a week: ${h} × ${d} = ${h*d}. Pay: ${h*d} × £${r.toFixed(2)} = ${gbp(pay)}.`,hint:'Work out the total hours first.'};}
+  const r=P([10.5,11,11.5,12,12.5,13]),base=R(16,30),ot=R(2,8),r2=r*1.5,pay=+(base*r+ot*r2).toFixed(2);
+  return {sub:'Money problems',text:`${N} is paid £${r.toFixed(2)} an hour for the first ${base} hours each week, and “time and a half” for any extra hours. One week ${N} works ${base+ot} hours. How much does ${N} earn that week?`,ans:pay,show:gbp(pay),exp:`Normal pay: ${base} × £${r.toFixed(2)} = ${gbp(base*r)}. Time and a half: £${r.toFixed(2)} × 1.5 = £${r2.toFixed(2)} an hour. Extra pay: ${ot} × £${r2.toFixed(2)} = ${gbp(ot*r2)}. Total: ${gbp(base*r)} + ${gbp(ot*r2)} = ${gbp(pay)}.`,hint:'Time and a half means 1.5 times the normal hourly rate.'};},
+ lv=>{if(Math.random()<.5){const a=R(1,9),f=a+R(2,10),end=a-f;
+   return {sub:'Negative numbers',text:`At 3 pm the temperature in Aylesbury was ${a}°C. By 3 am it had fallen by ${f} degrees. What was the temperature at 3 am?`,ans:end,show:m(end)+'°C',exp:`Start at ${a} and count down ${f}: ${a} − ${f} = ${m(end)}°C.`,hint:'Use a number line. Falling below zero gives a negative number.'};}
+  const a=R(2,15),b=R(3,18),c=P(['Moscow','Oslo','Toronto','Helsinki']);
+  return {sub:'Negative numbers',text:`One winter morning it is −${b}°C in ${c} and ${a}°C in London. How many degrees warmer is London than ${c}?`,ans:a+b,show:(a+b)+' degrees',exp:`From −${b} up to 0 is ${b} degrees, then from 0 up to ${a} is ${a} more. ${b} + ${a} = ${a+b} degrees.`,hint:'Count up from the negative number to zero, then on to the positive number.'};},
+ lv=>{if(Math.random()<.55){const c=P([12,14,16,17]);let n=R(30,120);if(n%c===0)n++;const q=Math.floor(n/c),r=n%c;
+   return {sub:'Short division',text:`A college trip has ${n} students and staff. Each minibus holds ${c} people. How many minibuses are needed?`,ans:q+1,show:''+(q+1),exp:`${n} ÷ ${c} = ${q} remainder ${r}. ${q} minibuses would leave ${r} people behind, so you need ${q+1}.`,hint:'Divide, then think about what to do with the remainder.'};}
+  const c=P([6,12,24]);let n=R(50,300);if(n%c===0)n+=R(1,c-1);const q=Math.floor(n/c);
+  return {sub:'Short division',text:`A farm collects ${n} eggs. Egg boxes hold ${c} eggs each. How many boxes can be completely filled?`,ans:q,show:''+q,exp:`${n} ÷ ${c} = ${q} remainder ${n%c}. Only ${q} boxes can be completely filled.`,hint:'Divide, then ignore the remainder because a box must be full.'};},
+ lv=>{const N=nm(),[a,b,x,y]=P([[8,6,'Burgers','buns'],[10,12,'Sausages','rolls'],[6,4,'Cups','plates'],[12,8,'Hot dogs','rolls'],[9,6,'Pens','pencils'],[15,10,'Juice cartons','cereal bars']]),l=a*b/gcd(a,b);
+  return {sub:'HCF and LCM',text:`${x} come in packs of ${a} and ${y} come in packs of ${b}. ${N} wants to buy exactly the same number of ${x.toLowerCase()} and ${y}. What is the smallest number of packs of ${y} ${N} can buy?`,ans:l/b,show:''+l/b,exp:`You need the lowest common multiple of ${a} and ${b}, which is ${l}. ${l} ÷ ${b} = ${l/b} packs of ${y}.`,hint:'List the multiples of both pack sizes and find the first one they share.'};},
+ lv=>{const n=lv===1?12:24,ua=P([49,79,99,149]),ub=P([0,19,29]),ma=R(10,20),mb=ma+R(1,4),A=ua+ma*n,B=ub+mb*n;if(A===B)return WORD.number[0](lv);const d=Math.abs(A-B);
+  return {sub:'Money problems',text:`Phone plan A costs £${ua} up front plus £${ma} a month. Plan B costs ${ub?'£'+ub:'nothing'} up front plus £${mb} a month. Both plans last ${n} months. How much cheaper is the cheaper plan overall?`,ans:d,show:'£'+d,exp:`Plan A: £${ua} + ${n} × £${ma} = £${A}. Plan B: £${ub} + ${n} × £${mb} = £${B}. Difference: £${Math.max(A,B)} − £${Math.min(A,B)} = £${d}. Plan ${A<B?'A':'B'} is cheaper.`,hint:'Work out the total cost of each plan for the whole contract.'};},
+ lv=>{if(Math.random()<.5){const st=60*R(10,20)+5*R(0,11),len=60*R(1,2)+5*R(1,11),end=(st+len)%1440,h=Math.floor(len/60),mi=len%60;
+   return {sub:'Time problems',text:`A film starts at ${hhmm(st)} and lasts ${h} hour${h>1?'s':''} ${mi} minutes. What time does it finish? Use the 24-hour clock, like 21:10.`,ans:Math.floor(end/60)*100+end%60,show:hhmm(end),exp:`Add ${h} hour${h>1?'s':''}: ${hhmm(st+60*h)}. Then add ${mi} minutes: ${hhmm(end)}.`,hint:'Add the hours first, then the minutes. 60 minutes make an hour.'};}
+  const dep=60*R(6,9)+R(0,59),dur=R(35,140),arr=dep+dur;
+  return {sub:'Time problems',text:`A train leaves at ${hhmm(dep)} and arrives at ${hhmm(arr)}. How many minutes does the journey take?`,ans:dur,show:dur+' minutes',exp:`Count on from ${hhmm(dep)} to ${hhmm(arr)}: that is ${Math.floor(dur/60)?`${Math.floor(dur/60)} hour${Math.floor(dur/60)>1?'s':''} ${dur%60} minutes, which is `:''}${dur} minutes.`,hint:'Count on to the next hour first, then to the arrival time.'};}
+],
+fraction:[
+ lv=>{const pr=P([24,30,36,40,45,50,60,80,120]),item=P(['a jacket','some trainers','a games controller','a hoodie','some headphones']);
+  if(lv<3){const p=P(lv===1?[10,20,25,50]:[15,20,30,35,40]),sale=pr*(100-p)/100;
+   return {sub:'Percentage increase and decrease',text:`In a sale, all prices are reduced by ${p}%. ${item[0].toUpperCase()+item.slice(1)} normally costs £${pr}. What is the sale price?`,ans:sale,show:gbp(sale),exp:`${p}% of £${pr} = ${gbp(pr*p/100)}. Sale price: £${pr} − ${gbp(pr*p/100)} = ${gbp(sale)}.`,hint:'Find the discount, then take it off the price.'};}
+  const a=P([20,25,50]),b=P([10,20]),s1=pr*(100-a)/100,s2=+(s1*(100-b)/100).toFixed(2);
+  return {sub:'Percentage increase and decrease',text:`${item[0].toUpperCase()+item.slice(1)} normally costs £${pr}. In a sale it is reduced by ${a}%. On the last day there is a further ${b}% off the sale price. What is the final price?`,ans:s2,show:gbp(s2),exp:`After ${a}% off: £${pr} × ${(100-a)/100} = ${gbp(s1)}. After a further ${b}% off: ${gbp(s1)} × ${(100-b)/100} = ${gbp(s2)}. This is not the same as ${a+b}% off.`,hint:'Do the two discounts one after the other. The second one is a percentage of the sale price.'};},
+ lv=>{const [[a1,d1],[a2,d2],L]=P([[[1,4],[2,5],20],[[1,3],[1,4],12],[[1,2],[1,5],10],[[3,8],[1,4],8],[[2,5],[1,3],15],[[1,6],[1,2],6]]),N=L*R(2,lv===1?5:9),w=N*a1/d1,b=N*a2/d2,rest=N-w-b;
+  return {sub:'Fractions of amounts',text:`There are ${N} students in a year group. ${fr(a1,d1)} of them walk to college and ${fr(a2,d2)} of them get the bus. The rest travel by car. How many travel by car?`,ans:rest,show:''+rest,exp:`Walk: ${a1}/${d1} of ${N} = ${w}. Bus: ${a2}/${d2} of ${N} = ${b}. Car: ${N} − ${w} − ${b} = ${rest}.`,hint:'Find each fraction of the total, then take both away from the total.'};},
+ lv=>{const pr=5*R(8,60),vat=pr/5;
+  return {sub:'Percentages of amounts',text:`A plumber quotes £${pr} plus VAT for a job. VAT is 20%. What is the total cost including VAT?`,ans:pr+vat,show:'£'+(pr+vat),exp:`20% of £${pr} is £${pr} ÷ 5 = £${vat}. Total: £${pr} + £${vat} = £${pr+vat}.`,hint:'20% is one fifth. Find it, then add it on.'};},
+ lv=>{const N=nm();let t1,t2,s1,s2,p1,p2;do{t1=P([20,25,50]);t2=P([20,25,50]);s1=R(Math.ceil(t1*.4),t1);s2=R(Math.ceil(t2*.4),t2);p1=s1*100/t1;p2=s2*100/t2;}while(p1===p2);
+  return {sub:'Percentages',text:`${N} scored ${s1} out of ${t1} in a maths test and ${s2} out of ${t2} in an English test. What was ${N}'s higher percentage score?`,ans:Math.max(p1,p2),show:Math.max(p1,p2)+'%',exp:`Maths: ${s1} ÷ ${t1} × 100 = ${p1}%. English: ${s2} ÷ ${t2} × 100 = ${p2}%. The higher score is ${p1>p2?'maths':'English'}, ${Math.max(p1,p2)}%.`,hint:'Change both scores into percentages before you compare them.'};},
+ lv=>{const N=nm(),a=P([200,250,300,400,500]),p=P([4,5,6,8,10,12,15,20]),b=a*(100+p)/100;
+  return {sub:'Percentage change',text:`${N}'s weekly wage goes up from £${a} to ${gbp(b)}. What is the percentage increase?`,ans:p,show:p+'%',exp:`Increase: ${gbp(b)} − £${a} = ${gbp(b-a)}. Percentage increase: ${money(b-a)} ÷ ${a} × 100 = ${p}%.`,hint:'Percentage change = change ÷ original × 100.'};},
+ lv=>{const p=P([10,20,25,40,50]),mul={10:10,20:5,25:4,40:5,50:2}[p],orig=mul*R(3,lv===1?10:20),s=orig*(100-p)/100,item=P(['video game','pair of jeans','bike helmet','phone case','board game']);
+  return {sub:'Reverse percentages',text:`After a ${p}% reduction, a ${item} costs ${gbp(s)}. What was the original price?`,ans:orig,show:'£'+orig,exp:`${gbp(s)} is ${100-p}% of the original price. 1% is ${gbp(s)} ÷ ${100-p} = ${gbp(orig/100)}. 100% is ${gbp(orig/100)} × 100 = £${orig}.`,hint:`The sale price is ${100-p}% of the original, not 100%.`};},
+ lv=>{const N=nm(),Pp=P([300,500,800,1000,1200,2000]),r=P([2,3,4,5]),n=R(2,lv===1?4:5);
+  if(lv===1){const I=Pp*r*n/100;return {sub:'Simple interest',text:`${N} puts £${Pp} into a savings account that pays ${r}% simple interest each year. How much interest will ${N} have earned after ${n} years?`,ans:I,show:gbp(I),exp:`Interest each year: ${r}% of £${Pp} = ${gbp(Pp*r/100)}. Over ${n} years: ${gbp(Pp*r/100)} × ${n} = ${gbp(I)}.`,hint:'Simple interest is the same amount every year.'};}
+  const v=Math.round(Pp*(1+r/100)**n*100)/100;
+  return {sub:'Compound interest',text:`${N} puts £${Pp} into a savings account that pays ${r}% compound interest each year. How much will be in the account after ${n} years? Give your answer to the nearest penny.`,ans:v,tol:.011,show:'£'+v.toFixed(2),exp:`Each year the money is multiplied by ${1+r/100}. £${Pp} × ${1+r/100}<sup>${n}</sup> = £${v.toFixed(2)}.`,hint:'Multiply by the multiplier once for every year.'};},
+ lv=>{const N=nm(),a=P([3,4,5]),b=P([2,3,4]),W=a*b*R(4,lv===1?8:15),t=W/a,left1=W-t,f=left1/b,left=left1-f,what=P([['travel','food'],['rent','bills'],['clothes','going out']]);
+  return {sub:'Fractions of amounts',text:`${N} earns £${W} a month. ${N} spends ${fr(1,a)} of it on ${what[0]}, then ${fr(1,b)} of what is left on ${what[1]}. How much money does ${N} have left?`,ans:left,show:'£'+left,exp:`${what[0][0].toUpperCase()+what[0].slice(1)}: £${W} ÷ ${a} = £${t}, leaving £${left1}. ${what[1][0].toUpperCase()+what[1].slice(1)}: £${left1} ÷ ${b} = £${f}, leaving £${left}.`,hint:'The second fraction is a fraction of what is left, not of the whole wage.'};}
+],
+ratio:[
+ lv=>{const N=nm(),s=P([4,6,8]),t=P([2,3,5,10,12].filter(x=>x!==s)),[ing,unit]=P([['flour','g'],['milk','ml'],['sugar','g'],['butter','g']]),per=P([20,25,30,40,50,60]),amt=s*per;
+  return {sub:'Recipes and proportion',text:`A pancake recipe for ${s} people uses ${amt} ${unit} of ${ing}. ${N} is making pancakes for ${t} people. How much ${ing} is needed?`,ans:per*t,show:per*t+' '+unit,exp:`For 1 person: ${amt} ÷ ${s} = ${per} ${unit}. For ${t} people: ${per} × ${t} = ${per*t} ${unit}.`,hint:'Work out how much one person needs first.'};},
+ lv=>{const [A,B]=two(),a=R(2,5),b=R(1,6),k=P([5,8,10,12,15,20]),tot=(a+b)*k;
+  return {sub:'Sharing in a ratio',text:`${A} and ${B} wash cars for a weekend. They share the £${tot} they earn in the ratio ${a} : ${b}, based on the hours they each worked. How much does ${A} get?`,ans:a*k,show:'£'+a*k,exp:`Total parts: ${a} + ${b} = ${a+b}. One part: £${tot} ÷ ${a+b} = £${k}. ${A} gets ${a} parts: ${a} × £${k} = £${a*k}.`,hint:'Add the ratio numbers to find how many parts there are.'};},
+ lv=>{let v1,v2,u1,u2;do{v1=P([1,1.5,2]);v2=P([1,1.5,2,3]);u1=2*R(40,70);u2=u1+P([-12,-8,-6,6,8,12]);}while(v1===v2);const c1=u1*v1/100,c2=u2*v2/100,best=Math.min(u1,u2);
+  return {sub:'Best buys',text:`A ${v1} litre bottle of juice costs £${c1.toFixed(2)}. A ${v2} litre bottle costs £${c2.toFixed(2)}. Which is better value? Give the cost per litre of the better buy, in pence.`,ans:best,show:best+'p',exp:`${v1} litre bottle: ${Math.round(c1*100)}p ÷ ${v1} = ${u1}p per litre. ${v2} litre bottle: ${Math.round(c2*100)}p ÷ ${v2} = ${u2}p per litre. The ${u1<u2?v1:v2} litre bottle is better value at ${best}p per litre.`,hint:'Work out the price of one litre for each bottle.'};},
+ lv=>{const N=nm(),rate=P([1.15,1.16,1.18,1.2]),take=10*R(15,60),eur=+(take*rate).toFixed(2);
+  if(lv<3)return {sub:'Exchange rates',text:`${N} changes £${take} into euros before a holiday. The exchange rate is £1 = €${rate}. How many euros does ${N} get?`,ans:eur,show:'€'+money(eur),exp:`Pounds to euros: multiply by the rate. ${take} × ${rate} = €${money(eur)}.`,hint:'Pounds into euros means multiply.'};
+  const sp=10*R(5,Math.floor(eur/10)-3),left=+(eur-sp).toFixed(2),back=+(rate+P([.04,.05,.06])).toFixed(2),pounds=Math.round(left/back*100)/100;
+  return {sub:'Exchange rates',text:`${N} changes £${take} into euros at £1 = €${rate}. On holiday ${N} spends €${sp}. At the airport, ${N} changes the rest back into pounds at £1 = €${back}. How many pounds does ${N} get back? Give your answer to the nearest penny.`,ans:pounds,tol:.011,show:'£'+pounds.toFixed(2),exp:`Euros: ${take} × ${rate} = €${money(eur)}. Left over: €${money(eur)} − €${sp} = €${money(left)}. Back to pounds: ${money(left)} ÷ ${back} = £${pounds.toFixed(2)}.`,hint:'Multiply to go into euros. Divide to come back into pounds.'};},
+ lv=>{const N=nm();let s,t,d;do{s=P([30,40,45,50,60,70]);t=P([30,45,60,90,120,150]);d=s*t/60;}while(!Number.isInteger(d));
+  if(lv===1)return {sub:'Speed, distance, time',text:`${N} drives ${d} miles at an average speed of ${s} mph. How many minutes does the journey take?`,ans:t,show:t+' minutes',exp:`Time = distance ÷ speed = ${d} ÷ ${s} = ${+(d/s).toFixed(3)} hours. × 60 = ${t} minutes.`,hint:'Time = distance ÷ speed. Then change hours into minutes.'};
+  const dep=60*R(7,15)+5*R(0,11),arr=dep+t;
+  return {sub:'Speed, distance, time',text:`${N} leaves home at ${hhmm(dep)} and drives ${d} miles at an average speed of ${s} mph. What time does ${N} arrive? Use the 24-hour clock, like 14:35.`,ans:Math.floor(arr/60)*100+arr%60,show:hhmm(arr),exp:`Time = ${d} ÷ ${s} = ${+(d/s).toFixed(3)} hours, which is ${t} minutes. ${hhmm(dep)} + ${t} minutes = ${hhmm(arr)}.`,hint:'Find the journey time, change it to minutes, then add it on.'};},
+ lv=>{const N=nm();let a,b;do{a=R(1,5);b=R(1,6);}while(a===b);const k=P([50,75,100,150]),y=b*k,col=P([['green','blue','yellow'],['orange','red','yellow'],['purple','red','blue']]);
+  if(lv<3)return {sub:'Ratio',text:`${col[0][0].toUpperCase()+col[0].slice(1)} paint is made by mixing ${col[1]} and ${col[2]} paint in the ratio ${a} : ${b}. ${N} uses ${y} ml of ${col[2]} paint. How much ${col[1]} paint is needed?`,ans:a*k,show:a*k+' ml',exp:`${b} parts = ${y} ml, so 1 part = ${y} ÷ ${b} = ${k} ml. ${col[1][0].toUpperCase()+col[1].slice(1)} is ${a} parts: ${a} × ${k} = ${a*k} ml.`,hint:'Work out what one part is worth.'};
+  return {sub:'Ratio',text:`${col[0][0].toUpperCase()+col[0].slice(1)} paint is made by mixing ${col[1]} and ${col[2]} paint in the ratio ${a} : ${b}. ${N} uses ${y} ml of ${col[2]} paint. How much ${col[0]} paint does ${N} make altogether?`,ans:(a+b)*k,show:(a+b)*k+' ml',exp:`${b} parts = ${y} ml, so 1 part = ${k} ml. Altogether there are ${a} + ${b} = ${a+b} parts: ${a+b} × ${k} = ${(a+b)*k} ml.`,hint:'Find one part, then multiply by the total number of parts.'};},
+ lv=>{const a=R(3,8),d=R(4,12),tot=a*d,opts=[];for(let b=2;b<=12;b++)if(tot%b===0&&b!==a)opts.push(b);if(!opts.length)return WORD.ratio[0](lv);const b=P(opts),an=P([['dogs','sack of dog food'],['horses','bale of hay'],['rabbits','bag of food']]);
+  return {sub:'Inverse proportion',text:`A ${an[1]} lasts ${a} ${an[0]} for ${d} days. How many days would it last ${b} ${an[0]}?`,ans:tot/b,show:tot/b+' days',exp:`It holds ${a} × ${d} = ${tot} days of food for one animal. Shared between ${b}: ${tot} ÷ ${b} = ${tot/b} days.`,hint:'More animals means the food runs out sooner. Find how long it would last one animal.'};}
+],
+algebra:[
+ lv=>{const f=P([2.5,3,3.5,4]),r=P([1.2,1.5,1.6,1.8,2,2.4]),mi=R(3,lv===1?10:18),c=+(f+r*mi).toFixed(2);
+  return {sub:'Solving equations',text:`A taxi charges £${f.toFixed(2)} plus £${r.toFixed(2)} for every mile. A journey costs £${c.toFixed(2)}. How many miles long was the journey?`,ans:mi,show:mi+' miles',exp:`Take off the fixed charge: £${c.toFixed(2)} − £${f.toFixed(2)} = £${(c-f).toFixed(2)}. Divide by the cost per mile: ${(c-f).toFixed(2)} ÷ ${r.toFixed(2)} = ${mi} miles.`,hint:'Take away the fixed charge first, then divide.'};},
+ lv=>{const N=nm(),x=R(2,15),a=R(2,6),b=R(1,12);
+  if(lv===3){const res=a*(x+b);return {sub:'Solving equations',text:`${N} thinks of a number, adds ${b}, then multiplies the result by ${a}. The answer is ${res}. What number did ${N} think of?`,ans:x,show:''+x,exp:`Work backwards: ${res} ÷ ${a} = ${x+b}, then ${x+b} − ${b} = ${x}. As an equation: ${a}(x + ${b}) = ${res}.`,hint:'Undo each step in reverse order.'};}
+  const add=Math.random()<.5,res=add?a*x+b:a*x-b;
+  return {sub:'Solving equations',text:`${N} thinks of a number, multiplies it by ${a}, then ${add?'adds':'subtracts'} ${b}. The answer is ${res}. What number did ${N} think of?`,ans:x,show:''+x,exp:`As an equation: ${a}x ${add?'+':'−'} ${b} = ${res}. ${add?'Subtract':'Add'} ${b}: ${a}x = ${add?res-b:res+b}. Divide by ${a}: x = ${x}.`,hint:'Undo each step in reverse order.'};},
+ lv=>{const [A,B]=two();if(lv<3){const x=R(5,20),d=R(2,8),tot=2*x+d;
+   return {sub:'Solving equations',text:`${A} is ${d} years older than ${B}. Their ages add up to ${tot}. How old is ${B}?`,ans:x,show:x+' years old',exp:`Let ${B}'s age be x. Then x + (x + ${d}) = ${tot}, so 2x + ${d} = ${tot}. 2x = ${tot-d}, so x = ${x}.`,hint:'Call the younger age x and write an equation.'};}
+  const x=R(8,16),k=P([3,4]),tot=x*(k+1);
+  return {sub:'Solving equations',text:`${A}'s mum is ${k===3?'three':'four'} times as old as ${A}. Together their ages add up to ${tot}. How old is ${A}?`,ans:x,show:x+' years old',exp:`Let ${A}'s age be x. Mum is ${k}x. x + ${k}x = ${tot}, so ${k+1}x = ${tot} and x = ${x}.`,hint:'Write both ages using x, then add them.'};},
+ lv=>{const w=R(3,15),d=R(2,8),Pm=2*(2*w+d);
+  return {sub:'Solving equations',text:`A rectangular garden is ${d} m longer than it is wide. Its perimeter is ${Pm} m. How wide is the garden?`,ans:w,show:w+' m',exp:`Let the width be w. The length is w + ${d}. Perimeter: 2(w + w + ${d}) = ${Pm}, so 4w + ${2*d} = ${Pm}. 4w = ${Pm-2*d}, so w = ${w} m.`,hint:'Write the length using w, then use perimeter = 2 × (length + width).'};},
+ lv=>{const a=P([4,5,6]),d=P([2,3]),seq=[0,1,2].map(i=>a+i*d);
+  if(lv<3){const n=P([10,12,15,20,25]),ans=a+(n-1)*d;return {sub:'Sequences',text:`Tables are pushed together in a row. 1 table seats ${seq[0]} people, 2 tables seat ${seq[1]}, and 3 tables seat ${seq[2]}. How many people can sit at ${n} tables in a row?`,ans,show:''+ans,exp:`Each extra table adds ${d} seats. nth term = ${d}n + ${a-d}. For n = ${n}: ${d} × ${n} + ${a-d} = ${ans}.`,hint:'Find how many seats each new table adds, then build the nth term.'};}
+  const n=R(12,30),pp=a+(n-1)*d-R(0,d-1);
+  return {sub:'Sequences',text:`Tables are pushed together in a row. 1 table seats ${seq[0]} people, 2 tables seat ${seq[1]}, and 3 tables seat ${seq[2]}. What is the smallest number of tables needed to seat ${pp} people?`,ans:n,show:''+n,exp:`nth term = ${d}n + ${a-d}. Solve ${d}n + ${a-d} ≥ ${pp}: ${d}n ≥ ${pp-(a-d)}, so n ≥ ${+((pp-(a-d))/d).toFixed(2)}. The smallest whole number is ${n}.`,hint:'Write the nth term, then work backwards from the number of people.'};},
+ lv=>{const c=P([1.8,2.1,2.4,2.6,2.9,3.2]),k=P([1.5,2.2,2.5,2.8,3.4]),a=P([2,3]),t1=+(a*c+k).toFixed(2),t2=+(c+k).toFixed(2),askCake=lv===3;
+  return {sub:'Simultaneous equations',text:`At a café, ${a} coffees and 1 cake cost £${t1.toFixed(2)}. 1 coffee and 1 cake cost £${t2.toFixed(2)}. How much does ${askCake?'one cake':'one coffee'} cost?`,ans:askCake?k:c,show:'£'+(askCake?k:c).toFixed(2),exp:`Subtract the second order from the first: ${a-1} coffee${a>2?'s':''} cost${a>2?'':'s'} £${t1.toFixed(2)} − £${t2.toFixed(2)} = £${(t1-t2).toFixed(2)}${a>2?`, so 1 coffee costs £${c.toFixed(2)}`:''}.${askCake?` Then 1 cake = £${t2.toFixed(2)} − £${c.toFixed(2)} = £${k.toFixed(2)}.`:''}`,hint:'Compare the two orders. What is the difference between them?'};},
+ lv=>{const per=P([20,25,30]),plus=P([20,25,30]),w=P(lv===1?[1,1.5,2]:[1.5,2,2.5,3,3.5]),t=per*w*2+plus;
+  return {sub:'Using formulas',text:`A chicken needs ${per} minutes of cooking for every 500 g, plus an extra ${plus} minutes. How many minutes does a ${w} kg chicken need?`,ans:t,show:t+' minutes',exp:`${w} kg = ${w*1000} g, which is ${w*2} lots of 500 g. ${w*2} × ${per} = ${per*w*2} minutes. Add ${plus}: ${t} minutes.`,hint:'Change kg into grams, then count the 500 g lots.'};},
+ lv=>{const N=nm(),price=P([6,7,8,9,12]),keep=R(3,10),have=R(keep+price+2,keep+price*8),mx=Math.floor((have-keep)/price);
+  return {sub:'Inequalities',text:`Cinema tickets cost £${price} each. ${N} has £${have} and must keep £${keep} for the bus home. What is the greatest number of tickets ${N} can buy?`,ans:mx,show:''+mx,exp:`Money to spend: £${have} − £${keep} = £${have-keep}. Solve ${price}t ≤ ${have-keep}: t ≤ ${+((have-keep)/price).toFixed(2)}. The greatest whole number is ${mx}.`,hint:'Take off the bus money, then see how many tickets fit.'};}
+],
+geometry:[
+ lv=>{const L=R(6,20),W=R(4,12),pw=P([1.5,2,2.5]),per=2*(L+W),panels=Math.ceil(per/pw),c=P([18,22,25,30,35]);
+  if(lv===1)return {sub:'Perimeter and area',text:`A rectangular garden is ${L} m long and ${W} m wide. Fence panels are ${pw} m wide. How many panels are needed to fence all the way round?`,ans:panels,show:''+panels,exp:`Perimeter: 2 × (${L} + ${W}) = ${per} m. Panels: ${per} ÷ ${pw} = ${+(per/pw).toFixed(2)}${per%pw?`, so round up to ${panels}`:''}.`,hint:'Find the perimeter, then divide by the panel width. Round up.'};
+  return {sub:'Perimeter and area',text:`A rectangular garden is ${L} m long and ${W} m wide. Fence panels are ${pw} m wide and cost £${c} each. How much will it cost to fence all the way round?`,ans:panels*c,show:'£'+panels*c,exp:`Perimeter: 2 × (${L} + ${W}) = ${per} m. Panels: ${per} ÷ ${pw} = ${+(per/pw).toFixed(2)}${per%pw?`, round up to ${panels}`:''}. Cost: ${panels} × £${c} = £${panels*c}.`,hint:'Perimeter first, then the number of panels (round up), then the cost.'};},
+ lv=>{const l=R(30,60)/10,w=R(25,45)/10,c=P([8,10,12,15,18,20]),area=+(l*w).toFixed(2),cost=+(area*c).toFixed(2);
+  return {sub:'Area',text:`A bedroom floor is a rectangle ${l} m long and ${w} m wide. Carpet costs £${c} per square metre. How much does it cost to carpet the whole floor?`,ans:cost,show:gbp(cost),exp:`Area: ${l} × ${w} = ${area} m². Cost: ${area} × £${c} = ${gbp(cost)}.`,hint:'Find the area in m², then multiply by the price per m².'};},
+ lv=>{const wl=R(3,9),h=P([2,2.5,3]),cov=P([5,6,8,10,12]),coats=lv===1?1:2,area=wl*h,tins=Math.ceil(area*coats/cov);
+  return {sub:'Area',text:`A wall is ${wl} m long and ${h} m high. One tin of paint covers ${cov} m². ${coats===2?'The wall needs two coats of paint. ':''}How many tins of paint are needed?`,ans:tins,show:''+tins,exp:`Wall area: ${wl} × ${h} = ${area} m².${coats===2?` Two coats: ${area} × 2 = ${area*2} m².`:''} Tins: ${area*coats} ÷ ${cov} = ${+(area*coats/cov).toFixed(2)}${(area*coats)%cov?`, so round up to ${tins}`:''}.`,hint:'Find the area to paint, then divide by what one tin covers. Round up.'};},
+ lv=>{const a=P([40,50,60,80]),b=P([25,30,35,40]),c=P([30,40,45,50]),v=a*b*c,lit=v/1000;
+  if(lv<3)return {sub:'Volume',text:`A fish tank is a cuboid measuring ${a} cm by ${b} cm by ${c} cm. How many litres of water does it hold when full? (1 litre = 1000 cm³)`,ans:lit,show:lit+' litres',exp:`Volume: ${a} × ${b} × ${c} = ${v.toLocaleString('en-GB')} cm³. Litres: ${v.toLocaleString('en-GB')} ÷ 1000 = ${lit} litres.`,hint:'Find the volume in cm³, then divide by 1000.'};
+  const q=+(lit*3/4).toFixed(3);return {sub:'Volume',text:`A fish tank is a cuboid measuring ${a} cm by ${b} cm by ${c} cm. It is filled ${fr(3,4)} full. How many litres of water are in it? (1 litre = 1000 cm³)`,ans:q,show:q+' litres',exp:`Full volume: ${a} × ${b} × ${c} = ${v.toLocaleString('en-GB')} cm³ = ${lit} litres. Three quarters: ${lit} × ¾ = ${q} litres.`,hint:'Find the full volume in litres first.'};},
+ lv=>{if(lv<3){const [L,f,h]=P([[5,3,4],[10,6,8],[13,5,12],[2.5,0.7,2.4],[2.6,1,2.4],[6.5,2.5,6]]);
+   return {sub:'Pythagoras’ theorem',text:`A ladder ${L} m long leans against a wall. The foot of the ladder is ${f} m from the wall, on flat ground. How high up the wall does the ladder reach?`,ans:h,show:h+' m',exp:`The ladder is the hypotenuse. h² = ${L}² − ${f}² = ${+(L*L).toFixed(2)} − ${+(f*f).toFixed(2)} = ${+(h*h).toFixed(2)}. h = √${+(h*h).toFixed(2)} = ${h} m.`,hint:'The ladder is the longest side. Subtract the squares.'};}
+  const L=R(30,60)/10,f=R(5,15)/10,ex=Math.sqrt(L*L-f*f),h=Math.round(ex*10)/10;
+  return {sub:'Pythagoras’ theorem',text:`A ladder ${L} m long leans against a wall. The foot of the ladder is ${f} m from the wall, on flat ground. How high up the wall does the ladder reach? Give your answer to 1 decimal place.`,ans:h,tol:.051,show:h.toFixed(1)+' m',exp:`h² = ${L}² − ${f}² = ${+(L*L).toFixed(2)} − ${+(f*f).toFixed(2)} = ${+(L*L-f*f).toFixed(2)}. h = √${+(L*L-f*f).toFixed(2)} = ${ex.toFixed(3)}… ≈ ${h.toFixed(1)} m.`,hint:'The ladder is the hypotenuse, so subtract the squares.'};},
+ lv=>{const d=P([50,60,66,70,72]),n=P([10,50,100,250]),ex=Math.PI*d*n/100,ans=Math.round(ex*10)/10;
+  return {sub:'Circles',text:`A bike wheel has a diameter of ${d} cm. How far does the bike travel, in metres, when the wheel turns ${n} times? Give your answer to 1 decimal place.`,ans,tol:Math.max(.051,ex*.001),show:ans.toFixed(1)+' m',exp:`One turn = circumference = π × ${d} = ${(Math.PI*d).toFixed(2)} cm. ${n} turns: ${(Math.PI*d).toFixed(2)} × ${n} = ${(Math.PI*d*n).toFixed(1)} cm = ${ex.toFixed(2)} m ≈ ${ans.toFixed(1)} m.`,hint:'One turn of the wheel moves the bike one circumference.'};},
+ lv=>{const N=nm();let sc,cm,sp,km,mins;do{sc=P([25000,50000]);cm=P([4,6,8,10,12]);sp=P([4,5]);km=cm*sc/100000;mins=km/sp*60;}while(!Number.isInteger(mins));
+  if(lv===1)return {sub:'Maps and scale drawings',text:`On a map with a scale of 1 : ${sc.toLocaleString('en-GB')}, a walking route is ${cm} cm long. How long is the real route, in km?`,ans:km,show:km+' km',exp:`${cm} × ${sc.toLocaleString('en-GB')} = ${(cm*sc).toLocaleString('en-GB')} cm. ÷ 100,000 = ${km} km.`,hint:'Multiply by the scale, then change cm into km.'};
+  return {sub:'Maps and scale drawings',text:`On a map with a scale of 1 : ${sc.toLocaleString('en-GB')}, a walking route is ${cm} cm long. ${N} walks at ${sp} km/h. How many minutes will the walk take?`,ans:mins,show:mins+' minutes',exp:`Real distance: ${cm} × ${sc.toLocaleString('en-GB')} = ${(cm*sc).toLocaleString('en-GB')} cm = ${km} km. Time: ${km} ÷ ${sp} = ${+(km/sp).toFixed(3)} hours = ${mins} minutes.`,hint:'Find the real distance in km, then use time = distance ÷ speed.'};},
+ lv=>{const b=P([1,1.5,2]),g=P([150,200,250,300]),n=Math.floor(b*1000/g);
+  return {sub:'Unit conversions',text:`A bottle holds ${b} litre${b===1?'':'s'} of lemonade. Each glass holds ${g} ml. How many glasses can be completely filled?`,ans:n,show:''+n,exp:`${b} litre${b===1?'':'s'} = ${b*1000} ml. ${b*1000} ÷ ${g} = ${+(b*1000/g).toFixed(2)}${(b*1000)%g?`, so only ${n} full glasses`:''}.`,hint:'Change litres into millilitres first (× 1000).'};}
+],
+stats:[
+ lv=>{const N=nm();let n,m1,t,need;do{n=P([3,4,5]);m1=R(50,75);t=m1+R(2,6);need=t*(n+1)-m1*n;}while(need>100);
+  return {sub:'Averages',text:`${N}'s mean score in ${n} tests is ${m1}. What does ${N} need to score in the next test to raise the mean to ${t}?`,ans:need,show:''+need,exp:`Total so far: ${n} × ${m1} = ${n*m1}. Total needed for a mean of ${t} over ${n+1} tests: ${n+1} × ${t} = ${t*(n+1)}. Next score: ${t*(n+1)} − ${n*m1} = ${need}.`,hint:'Work with totals: mean × number of tests.'};},
+ lv=>{const n1=R(8,15),m1=R(5,12),n2=R(5,12),m2=R(5,15),T=n1*m1+n2*m2,ex=T/(n1+n2),ans=Math.round(ex*10)/10;
+  return {sub:'Averages',text:`In a survey, ${n1} students in group A watched a mean of ${m1} hours of TV a week. ${n2} students in group B watched a mean of ${m2} hours. What is the mean for all the students together? Give your answer to 1 decimal place.`,ans,tol:.051,show:ans.toFixed(1)+' hours',exp:`Group A total: ${n1} × ${m1} = ${n1*m1}. Group B total: ${n2} × ${m2} = ${n2*m2}. Overall: (${n1*m1} + ${n2*m2}) ÷ ${n1+n2} = ${T} ÷ ${n1+n2} = ${ex.toFixed(3)}… ≈ ${ans.toFixed(1)}.`,hint:'You can’t just average the two means. Find each group’s total first.'};},
+ lv=>{const N=nm(),T=P([100,200,250,500]),k=R(2,10),g=gcd(k,T);
+  return {sub:'Probability',text:`${T} raffle tickets are sold. ${N} buys ${k} of them. One ticket is picked at random for first prize. What is the probability that ${N} wins? Type it as a fraction, like 1/25.`,ans:k/T,show:`${k/g}/${T/g}`,exp:`${N} has ${k} of the ${T} tickets, so P(win) = ${k}/${T}${g>1?` = ${k/g}/${T/g}`:''}.`,hint:'Probability = tickets you have ÷ total tickets.'};},
+ lv=>{const N=nm(),p=P([0.05,0.1,0.15,0.2,0.25,0.3]),days=P([20,40,60,100,180]),ans=Math.round(p*days);
+  return {sub:'Expected outcomes',text:`The probability that ${N}'s bus is late is ${p}. ${N} catches the bus on ${days} college days. On how many days would you expect the bus to be late?`,ans,show:ans+' days',exp:`Expected number = probability × number of trials = ${p} × ${days} = ${ans}.`,hint:'Multiply the probability by the number of days.'};},
+ lv=>{const n=P([40,50,100,200]),k=R(5,n-5),rf=+(k/n).toFixed(3);
+  return {sub:'Probability',text:`A drawing pin is dropped ${n} times. It lands point up ${k} times. Estimate the probability that it lands point up next time. Give your answer as a decimal.`,ans:rf,tol:.0006,show:''+rf,exp:`Relative frequency = ${k} ÷ ${n} = ${rf}. This is the best estimate of the probability.`,hint:'Divide the number of times it happened by the number of trials.'};},
+ lv=>{const n=R(4,8),mm=R(800,2000)/100,tot=+(n*mm).toFixed(2);
+  if(lv<3)return {sub:'Averages',text:`${n} friends go out for a meal. They spend a mean of £${mm.toFixed(2)} each. How much do they spend altogether?`,ans:tot,show:gbp(tot),exp:`Total = mean × number of people = £${mm.toFixed(2)} × ${n} = ${gbp(tot)}.`,hint:'Total = mean × how many.'};
+  const x=R(10,30),nm2=Math.round((tot+x)/(n+1)*100)/100;
+  return {sub:'Averages',text:`${n} friends go out for a meal and spend a mean of £${mm.toFixed(2)} each. Another friend joins them and spends £${x}. What is the new mean amount spent? Give your answer to the nearest penny.`,ans:nm2,tol:.011,show:'£'+nm2.toFixed(2),exp:`Original total: ${n} × £${mm.toFixed(2)} = ${gbp(tot)}. New total: ${gbp(tot)} + £${x} = ${gbp(tot+x)}. New mean: ${money(+(tot+x).toFixed(2))} ÷ ${n+1} = £${nm2.toFixed(2)}.`,hint:'Find the old total, add the new amount, then divide by the new number of people.'};},
+ lv=>{const s=R(3,6),k=R(2,5),d=R(2,5);
+  return {sub:'Counting outcomes',text:`A meal deal is one main, one snack and one drink. There are ${s} mains, ${k} snacks and ${d} drinks to choose from. How many different meal deals are possible?`,ans:s*k*d,show:''+s*k*d,exp:`Multiply the number of choices: ${s} × ${k} × ${d} = ${s*k*d}.`,hint:'For each main, you can have any snack and any drink.'};}
+]
+};
+const WORDGEN=WORD;
 
-function makeQ(topic,lv){const q=P(GEN[topic])(lv);q.topic=topic;return q;}
+
+const ORIG_SUBS={
+ number:['Negative numbers','Order of operations (BIDMAS)','Rounding','Powers and roots','HCF and LCM'],
+ fraction:['Fractions of amounts','Percentages of amounts','Percentage increase and decrease','Fractions, decimals and percentages','Simplifying fractions','Adding fractions'],
+ algebra:['Solving equations','Substitution','Sequences','Simplifying expressions','Solving equations'],
+ ratio:['Sharing in a ratio','Recipes and proportion','Speed, distance, time','Unit pricing','Ratio'],
+ geometry:['Perimeter and area','Area','Angles','Volume','Circles','Pythagoras’ theorem'],
+ stats:['Averages','Averages','Averages','Averages','Probability','Expected outcomes']};
+function makeQ(topic,lv){const list=GEN[topic],i=R(0,list.length-1),q=list[i](lv);q.topic=topic;if(!q.sub)q.sub=ORIG_SUBS[topic][i]||TOPIC_NAMES[topic];return q;}
+const SUBIDX={};
+function genQ(t,k,i,lv){const q=(k==='word'?WORDGEN:GEN)[t][i](lv);q.topic=t;if(k==='word')q.word=true;if(!q.sub)q.sub=(k==='quick'?ORIG_SUBS[t][i]:'')||TOPIC_NAMES[t];return q;}
+function wordQ(t,lv){const l=WORDGEN[t];if(!l||!l.length)return makeQ(t,lv);return genQ(t,'word',R(0,l.length-1),lv);}
+function subIndex(t,kind='mixed'){const key=kind+'|'+t;if(SUBIDX[key])return SUBIDX[key];const m={};
+ const scan=k=>((k==='word'?WORDGEN:GEN)[t]||[]).forEach((g,i)=>{for(let n=0;n<18;n++){let q;try{q=genQ(t,k,i,1+n%3);}catch(e){continue;}const L=m[q.sub]=m[q.sub]||[];if(!L.some(x=>x[0]===k&&x[1]===i))L.push([k,i]);}});
+ if(kind!=='word')scan('quick');if(kind!=='quick')scan('word');
+ const out={};Object.keys(m).sort((x,y)=>x.localeCompare(y)).forEach(k=>out[k]=m[k]);return SUBIDX[key]=out;}
+function pickEntry(list,style){if(style!=='mixed')return P(list);const w=list.filter(e=>e[0]==='word'),q=list.filter(e=>e[0]==='quick');return w.length&&(!q.length||Math.random()<.35)?P(w):P(q);}
+function practiceQ(t,sub,lv,last,style='mixed'){const idx=subIndex(t,style);let q=null;
+ for(let k=0;k<44;k++){const L=k<15?lv:k<25?Math.min(3,lv+1):k<33?3:k<38?2:1;let c;
+  if(sub==='all'){const ent=Object.values(idx).flat();if(!ent.length)return makeQ(t,lv);c=genQ(t,...pickEntry(ent,style),L);}
+  else{const ids=idx[sub];if(!ids||!ids.length)return practiceQ(t,'all',lv,last,style);c=genQ(t,...pickEntry(ids,style),L);if(c.sub!==sub){q=q||c;continue;}}
+  q=c;if(c.text!==last)return c;}
+ return q||makeQ(t,lv);}
 function parseAns(s){s=String(s).replace(/[−–—]/g,'-').replace(/[²³]/g,'').replace(/[^0-9.\-\/]/g,'').replace(/^\/+|\/+$/g,'');if(!s)return NaN;if(s.includes('/')){const [a,b]=s.split('/');const x=parseFloat(a),y=parseFloat(b);return y?x/y:NaN;}return parseFloat(s);}
 function checkAns(q,raw){if(q.ratio){return String(raw).replace(/\s/g,'')===q.ratio.join(':');}if(q.exact){const s=String(raw).replace(/\s/g,'');return s===`${q.exact[0]}/${q.exact[1]}`;}const v=parseAns(raw);return Number.isFinite(v)&&Math.abs(v-q.ans)<=(q.tol??1e-6);}
 
@@ -759,10 +1045,10 @@ function checkAns(q,raw){if(q.ratio){return String(raw).replace(/\s/g,'')===q.ra
 const SAVE='numeria-quest-v1';
 let rollMsg='',lucky=false,lastRoll=0;
 let S=null,busy=false,ctrlMode='idle',dice=[1,1],qid=0,activeTimer=null;
-function freshState(name,cls,diff){const c=CLASSES[cls];return {v:1,hero:{name,cls,lv:1,xp:0,hp:c.hp,maxHp:c.hp,gold:20,items:{...c.start}},pos:0,cleared:[false,false,false,false,false,false],opened:{},diff,ng:0,streak:0,best:0,blitzBest:0,chests:0,wins:0,stats:Object.fromEntries(TOPICS.map(t=>[t,{c:0,a:0}])),ach:{},log:[],won:false,luck:true,stars:{},scores:{},bounties:[],bountiesDone:0,secrets:{},cheats:{},cheatUses:0,sixRun:0};}
+function freshState(name,cls,diff){const c=CLASSES[cls];return {v:1,hero:{name,cls,lv:1,xp:0,hp:c.hp,maxHp:c.hp,gold:20,items:{...c.start}},pos:0,cleared:[false,false,false,false,false,false],opened:{},diff,ng:0,streak:0,best:0,blitzBest:0,chests:0,wins:0,stats:Object.fromEntries(TOPICS.map(t=>[t,{c:0,a:0}])),ach:{},log:[],won:false,luck:true,stars:{},scores:{},bounties:[],bountiesDone:0,secrets:{},cheats:{},cheatUses:0,sixRun:0,subs:{},practiced:0};}
 function save(){try{localStorage.setItem(SAVE,JSON.stringify(S));}catch(e){}}
 function load(){try{const s=JSON.parse(localStorage.getItem(SAVE)||'null');if(s&&s.v===1&&s.hero)return upgrade(s);}catch(e){}return null;}
-function upgrade(s){s.stars=s.stars||{};s.scores=s.scores||{};s.bounties=s.bounties||[];s.bountiesDone=s.bountiesDone||0;s.secrets=s.secrets||{};s.cheats=s.cheats||{};s.cheatUses=s.cheatUses||0;s.sixRun=s.sixRun||0;if(s.luck===undefined)s.luck=true;if(s.hero&&!s.hero.av)s.hero.av={type:'initial',bg:CLASSES[s.hero.cls].color,skin:SKINS[1]};return s;}
+function upgrade(s){s.stars=s.stars||{};s.scores=s.scores||{};s.bounties=s.bounties||[];s.bountiesDone=s.bountiesDone||0;s.secrets=s.secrets||{};s.cheats=s.cheats||{};s.cheatUses=s.cheatUses||0;s.sixRun=s.sixRun||0;s.subs=s.subs||{};s.practiced=s.practiced||0;if(s.luck===undefined)s.luck=true;if(s.hero&&!s.hero.av)s.hero.av={type:'initial',bg:CLASSES[s.hero.cls].color,skin:SKINS[1]};return s;}
 const regionOf=i=>i>=42?6:Math.floor(i/7);
 const tileType=i=>i===42?'F':i%7===6?'G':PATTERNS[Math.floor(i/7)][i%7];
 const xpNeed=lv=>20+(lv-1)*15;
@@ -771,9 +1057,9 @@ const combo=()=>S.streak>=6?2:S.streak>=3?1:0;
 function pickLv(kind){const d=S.diff;let lv;if(d==='gentle')lv=kind==='battle'?1:2;else if(d==='exam')lv=kind==='battle'?P([2,3]):3;else lv=kind==='battle'?P([1,1,2]):P([2,3]);return Math.min(3,lv+(S.ng||0));}
 function topicFor(kind){const r=regionOf(S.pos);if(kind==='final'||r>5)return P(TOPICS);if(kind==='boss')return TOPICS[r];if(r>0&&Math.random()<.25)return P(TOPICS.slice(0,r));return TOPICS[r];}
 function addLog(t){S.log.unshift(t);S.log=S.log.slice(0,8);}
-function grant(id){if(S.ach[id])return;S.ach[id]=true;toast('Achievement unlocked',ACH[id][0]+' · '+ACH[id][1]);}
-function addXP(n){const h=S.hero;h.xp+=n;while(h.xp>=xpNeed(h.lv)){h.xp-=xpNeed(h.lv);h.lv++;h.maxHp+=3;h.hp=h.maxHp;toast('Level up!',`You reached level ${h.lv}. Max HP +3 and fully healed.`);addLog(`Reached level ${h.lv}.`);if(h.lv>=5)grant('lv5');}}
-function record(q,ok){const st=S.stats[q.topic];st.a++;if(ok){st.c++;if(q.ans===42)secret('answer42');S.streak++;S.best=Math.max(S.best,S.streak);addXP(3);if(S.streak>=5)grant('streak5');if(S.streak>=10)grant('streak10');bump('topic',1,q.topic);bump('combo',S.streak,null,true);}else S.streak=0;
+function grant(id){if(S.ach[id])return;S.ach[id]=true;setTimeout(()=>sfx('achieve'),900);toast('Achievement unlocked',ACH[id][0]+' · '+ACH[id][1]);}
+function addXP(n){const h=S.hero;h.xp+=n;while(h.xp>=xpNeed(h.lv)){h.xp-=xpNeed(h.lv);h.lv++;setTimeout(()=>sfx('levelup'),400);h.maxHp+=3;h.hp=h.maxHp;toast('Level up!',`You reached level ${h.lv}. Max HP +3 and fully healed.`);addLog(`Reached level ${h.lv}.`);if(h.lv>=5)grant('lv5');}}
+function record(q,ok){sfx(ok?'correct':'wrong');const st=S.stats[q.topic];st.a++;if(q.sub){S.subs=S.subs||{};const sk=q.topic+'|'+q.sub,ss=S.subs[sk]=S.subs[sk]||{c:0,a:0};ss.a++;if(ok)ss.c++;}if(ok){st.c++;if(q.ans===42)secret('answer42');S.streak++;S.best=Math.max(S.best,S.streak);addXP(3);if(S.streak>=5)grant('streak5');if(S.streak>=10)grant('streak10');bump('topic',1,q.topic);bump('combo',S.streak,null,true);}else S.streak=0;
  const tot=TOPICS.reduce((s,t)=>s+S.stats[t].a,0),cor=TOPICS.reduce((s,t)=>s+S.stats[t].c,0);if(tot>=50&&cor/tot>=.8)grant('sharp');save();renderHUD();renderSheet();}
 function hurtHero(n){if(S.cheats&&S.cheats.god)return {blocked:true,god:true};if(S.hero.items.shield>0){S.hero.items.shield--;return {blocked:true};}S.hero.hp=Math.max(0,S.hero.hp-n);return {blocked:false,n};}
 
@@ -948,19 +1234,29 @@ function renderLegend(){$('legend').innerHTML=Object.entries(TILE_INFO).map(([k,
 function renderSheet(){const h=S.hero,c=CLASSES[h.cls];
  $('heroPanel').innerHTML=`<div class="hero-row">${avatar()}<div style="flex:1;min-width:0"><div class="hero-name">${esc(h.name)}</div><div class="hero-cls">Level ${h.lv} ${c.name}${S.ng?` · New Game+ ${S.ng}`:''}</div></div><button class="btn sm" id="lookBtn" type="button">Change look</button></div>
  <dl class="kv"><dt>Attack power</dt><dd class="num">${heroDmg()}</dd><dt>Best combo</dt><dd class="num">${S.best}</dd><dt>Battles won</dt><dd class="num">${S.wins}</dd><dt>Best Blitz</dt><dd class="num">${S.blitzBest}</dd><dt>Secrets found</dt><dd class="num">${Object.keys(S.secrets||{}).length}/${Object.keys(SECRETS).length}</dd><dt>Cheat codes used</dt><dd class="num">${S.cheatUses||0}</dd></dl>
- <div class="row"><label for="diffSel" class="small">Difficulty</label><select id="diffSel"><option value="gentle">Gentle</option><option value="standard">Standard</option><option value="exam">Exam ready</option></select><span style="flex:1"></span><span id="resetBox"><button class="btn sm" id="resetBtn">New hero</button></span></div>`;
- $('lookBtn').onclick=openLook;$('diffSel').value=S.diff;$('diffSel').onchange=e=>{S.diff=e.target.value;save();toast('Difficulty changed',e.target.selectedOptions[0].textContent);};
+ <div class="row"><label for="diffSel" class="small">Difficulty</label><select id="diffSel"><option value="gentle">Gentle</option><option value="standard">Standard</option><option value="exam">Exam ready</option></select><span style="flex:1"></span><span id="resetBox"><button class="btn sm" id="resetBtn">New hero</button></span></div>
+ <h3>Sound effects</h3><div class="snd-row"><button class="btn sm toggle" id="sfxT" type="button" aria-pressed="${SND.sfx}">Effects: ${SND.sfx?'On':'Off'}</button><label class="small" for="fxR">Volume</label><input type="range" id="fxR" min="0" max="100" step="5" value="${SND.fxVol}"></div><h3>Music</h3><div class="snd-row"><button class="btn sm toggle" id="musT" type="button" aria-pressed="${SND.music}">Music: ${SND.music?'On':'Off'}</button><label class="small" for="musR">Volume</label><input type="range" id="musR" min="0" max="100" step="5" value="${SND.musVol}"></div><div class="snd-row"><button class="btn sm toggle" id="duckT" type="button" aria-pressed="${SND.duck}">Lower music during sound effects: ${SND.duck?'On':'Off'}</button><button class="btn sm toggle" id="batT" type="button" aria-pressed="${SND.battleMusic}">Battle music in fights: ${SND.battleMusic?'On':'Off'}</button></div><p class="small">${SND.battleMusic?'The music changes for battles and Guardians.':'One song loops all through the game.'}</p><button class="btn sm" id="studioBtn" type="button">Customise sounds</button>${SND.muted?'<p class="small">All sound is muted. Use the speaker button at the top to turn it back on.</p>':''}`;
+ $('lookBtn').onclick=openLook;
+ $('sfxT').onclick=()=>{SND.sfx=!SND.sfx;if(SND.sfx){SND.muted=false;actx();}applySound();renderSheet();sfx('correct');};
+ $('musT').onclick=()=>{SND.music=!SND.music;if(SND.music)SND.muted=false;actx();applySound();renderSheet();};
+ $('fxR').oninput=e=>{SND.fxVol=+e.target.value;if(fxGain)fxGain.gain.value=SND.fxVol/100;};$('fxR').onchange=()=>{saveSnd();sfx('coin');};
+ $('musR').oninput=e=>{SND.musVol=+e.target.value;if(musGain)musGain.gain.value=SND.musVol/100;};$('musR').onchange=saveSnd;
+ $('duckT').onclick=()=>{SND.duck=!SND.duck;saveSnd();renderSheet();if(SND.duck)sfx('victory');};
+ $('batT').onclick=()=>{SND.battleMusic=!SND.battleMusic;saveSnd();music(wantMusic);renderSheet();};
+ $('studioBtn').onclick=openStudio;$('diffSel').value=S.diff;$('diffSel').onchange=e=>{S.diff=e.target.value;save();toast('Difficulty changed',e.target.selectedOptions[0].textContent);};
  $('resetBtn').onclick=()=>{$('resetBox').innerHTML='<span class="small">Erase this hero?</span> <button class="btn sm danger" id="resetYes">Erase</button> <button class="btn sm" id="resetNo">Keep</button>';$('resetYes').onclick=()=>{try{localStorage.removeItem(SAVE);}catch(e){}S=null;closeDrawer();openStart();};$('resetNo').onclick=renderSheet;};
  $('bagPanel').innerHTML=`<h3>Bag</h3><div class="bag">${['potion','scroll','shield'].map(k=>`<div class="item">${itemIcon(k)}<b class="num">${h.items[k]}</b>${SHOP[k].name}</div>`).join('')}</div>${h.items.potion>0&&h.hp<h.maxHp?'<button class="btn sm" id="drink">Drink a potion (+12 HP)</button>':''}`;
  if($('drink'))$('drink').onclick=()=>{drink();};
  let worst=null;TOPICS.forEach(t=>{const st=S.stats[t];if(st.a>=3){const p=st.c/st.a;if(!worst||p<worst.p)worst={t,p};}});
  $('skillPanel').innerHTML=`<h3>Skill book</h3>${TOPICS.map(t=>{const st=S.stats[t],p=st.a?Math.round(100*st.c/st.a):0;return `<div class="skill"><span>${TOPIC_NAMES[t]}</span><div class="bar"><i style="width:${p}%"></i></div><span class="pct num">${st.a?p+'%':'–'}</span></div>`;}).join('')}
- <div class="tip">${worst&&worst.p<.8?`Practise next: <b>${TOPIC_NAMES[worst.t]}</b>. Accuracy ${Math.round(worst.p*100)}%.`:TOPICS.some(t=>S.stats[t].a)?'Strong across the topics you have tried. Keep going.':'Answer questions to fill your skill book.'}</div>`;
+ ${(()=>{const w=weakestSub();if(w)return `<div class="tip">Practise next: <b>${esc(w.sub)}</b> (${TOPIC_NAMES[w.t]}). Accuracy ${Math.round(w.p*100)}%.<div class="row" style="margin-top:6px"><button class="btn sm primary" id="prTip" type="button" data-t="${w.t}" data-s="${esc(w.sub)}">Practise it now</button></div></div>`;
+ return `<div class="tip">${worst&&worst.p<.8?`Practise next: <b>${TOPIC_NAMES[worst.t]}</b>. Accuracy ${Math.round(worst.p*100)}%.`:TOPICS.some(t=>S.stats[t].a)?'Strong across the topics you have tried. Keep going.':'Answer questions to fill your skill book.'}</div>`;})()}<button class="btn sm" id="prRoom" type="button">Open the Practice room</button>`;
+ if($('prTip'))$('prTip').onclick=e=>openPractice(e.currentTarget.dataset.t,e.currentTarget.dataset.s);$('prRoom').onclick=()=>openPractice();
  const got=Object.keys(S.ach).length;
  $('achPanel').innerHTML=`<h3>Achievements · <span class="num">${got}/${Object.keys(ACH).length}</span></h3><div class="ach">${Object.entries(ACH).map(([k,v])=>`<div class="badge ${S.ach[k]?'on':''}"><b>${v[0]}</b>${v[1]}</div>`).join('')}</div>`;
  $('logPanel').innerHTML=`<h3>Adventure log</h3>${S.log.length?`<ul class="log">${S.log.map(l=>`<li>${l}</li>`).join('')}</ul>`:'<p class="small">Your story starts at the camp in Number Meadows.</p>'}`;renderCodes();}
 function renderAll(){renderHUD();renderMap();renderControls();renderSheet();}
-function drink(){const h=S.hero;if(h.items.potion<1||h.hp>=h.maxHp)return false;h.items.potion--;h.hp=Math.min(h.maxHp,h.hp+12);save();renderHUD();renderSheet();toast('Potion','You feel better. HP '+h.hp+'/'+h.maxHp);return true;}
+function drink(){const h=S.hero;if(h.items.potion<1||h.hp>=h.maxHp)return false;h.items.potion--;h.hp=Math.min(h.maxHp,h.hp+12);sfx('drink');save();renderHUD();renderSheet();toast('Potion','You feel better. HP '+h.hp+'/'+h.maxHp);return true;}
 function toast(title,text){const t=document.createElement('div');t.className='toast';t.innerHTML=`<b>${esc(title)}</b>${esc(text)}`;$('toasts').appendChild(t);setTimeout(()=>t.remove(),3800);}
 
 /* ---------------- Dialog + question widget ---------------- */
@@ -969,20 +1265,28 @@ function openDialog(html,mode='free'){dlgMode=mode;$('dlgX').hidden=mode==='lock
 function tryClose(){if($('modal').hidden||dlgMode==='locked')return;
  if(dlgMode==='elite'){S.hero.hp=S.hero.maxHp;save();closeDialog();return;}
  if(dlgMode==='flee'){if($('fleeBox')){$('fleeNo').focus();return;}const cost=Math.min(5,S.hero.gold);
-  $('dialog').insertAdjacentHTML('afterbegin',`<div class="luck-banner flee" id="fleeBox"><span><b>Run away?</b> You’ll drop ${cost} gold and get no reward.</span><span class="row"><button class="btn sm danger" id="fleeYes" type="button">Run away</button><button class="btn sm" id="fleeNo" type="button">Keep going</button></span></div>`);$('modal').scrollTop=0;$('fleeNo').focus();
-  $('fleeYes').onclick=()=>{S.hero.gold-=cost;S.streak=0;addLog(`Ran away${cost?` and dropped ${cost} gold`:''}.`);save();closeDialog();toast('You escaped','You live to fight another day.');};
+  $('dialog').insertAdjacentHTML('afterbegin',`<div class="luck-banner flee" id="fleeBox"><span><b>Run away?</b> You’ll drop ${cost} gold, get no reward and go back to the space you came from.</span><span class="row"><button class="btn sm danger" id="fleeYes" type="button">Run away</button><button class="btn sm" id="fleeNo" type="button">Keep going</button></span></div>`);$('modal').scrollTop=0;$('fleeNo').focus();
+  $('fleeYes').onclick=()=>{sfx('flee');S.hero.gold-=cost;S.streak=0;{const to=backSpot(),d=S.pos-to;setReturn(to,`You ran away and went back ${d} space${d===1?'':'s'}.`);}addLog(`Ran away${cost?` and dropped ${cost} gold`:''}.`);save();closeDialog();toast('You escaped','You live to fight another day.');};
   $('fleeNo').onclick=()=>$('fleeBox').remove();return;}
  closeDialog();}
-function closeDialog(){dlgMode='free';if(activeTimer){clearInterval(activeTimer);activeTimer=null;}$('modal').hidden=true;$('dialog').innerHTML='';renderAll();}
+function closeDialog(){dlgMode='free';previewKey=null;music('map');if(activeTimer){clearInterval(activeTimer);activeTimer=null;}$('modal').hidden=true;$('dialog').innerHTML='';renderAll();if(pendingWalk){const pw=pendingWalk;pendingWalk=null;walkBack(pw.to,pw.msg);}}
+/* sending the hero back along the road */
+let pendingWalk=null;
+const backSpot=()=>S.prevPos!=null&&S.prevPos<S.pos?S.prevPos:Math.max(0,S.pos-1);
+const campSpot=()=>Math.min(regionOf(S.pos),5)*7;
+function setReturn(to,msg){if(!S)return;to=Math.max(0,to);if(to>=S.pos)return;pendingWalk={to,msg};S.pendingPos=to;save();}
+async function walkBack(to,msg){if(!S)return;busy=true;renderControls();setMsg(msg);let i=0;
+ while(S.pos>to){S.pos--;i++;placeToken();sfx('step',-2*i);await sleep(RM.matches?0:230);}
+ delete S.pendingPos;S.prevPos=S.pos;busy=false;save();rollMsg=msg;renderAll();}
 function head(eyebrow,title,calm){return `<div class="dlg-head ${calm?'calm':''}"><span class="eyebrow">${eyebrow}</span><h3>${title}</h3></div>`;}
 function askQ(el,q,o){const id='q'+(++qid);
- el.innerHTML=`<div class="qbox"><div class="chips"><span class="chip">${TOPIC_NAMES[q.topic]}</span>${q.sub?`<span class="chip soft">${q.sub}</span>`:''}${o.tag?`<span class="chip soft">${o.tag}</span>`:''}</div>
- <p class="q-text">${q.text}</p>${q.img?`<div class="q-fig">${q.img}</div>`:''}
+ el.innerHTML=`<div class="qbox"><div class="chips"><span class="chip">${TOPIC_NAMES[q.topic]}</span>${q.sub?`<span class="chip soft">${q.sub}</span>`:''}${q.word?'<span class="chip word">Word problem</span>':''}${o.tag?`<span class="chip soft">${o.tag}</span>`:''}</div>
+ <p class="q-text${q.word?' wordy':''}">${q.text}</p>${q.img?`<div class="q-fig">${q.img}</div>`:''}
  <form class="ans-row" id="${id}f"><input id="${id}i" class="ans" autocomplete="off" spellcheck="false" placeholder="Your answer" aria-label="Your answer"><button class="btn primary" type="submit">${o.verb||'Answer'}</button></form>
- ${S.hero.items.scroll>0?`<div><button type="button" class="link-btn" id="${id}h">Use a hint scroll (${S.hero.items.scroll} left)</button></div>`:''}
+ ${o.freeHint?`<div><button type="button" class="link-btn" id="${id}h">Show a hint</button></div>`:S.hero.items.scroll>0?`<div><button type="button" class="link-btn" id="${id}h">Use a hint scroll (${S.hero.items.scroll} left)</button></div>`:''}
  <div class="hint" id="${id}hint" hidden></div><div class="fb" id="${id}fb" aria-live="polite"></div></div>`;
  const f=$(id+'f'),inp=$(id+'i');setTimeout(()=>inp.focus(),40);
- const hb=$(id+'h');if(hb)hb.onclick=()=>{S.hero.items.scroll--;$(id+'hint').hidden=false;$(id+'hint').textContent='Hint: '+q.hint;hb.remove();save();renderSheet();};
+ const hb=$(id+'h');if(hb)hb.onclick=()=>{if(!o.freeHint)S.hero.items.scroll--;$(id+'hint').hidden=false;$(id+'hint').textContent='Hint: '+q.hint;hb.remove();save();renderSheet();};
  f.onsubmit=e=>{e.preventDefault();if(!inp.value.trim()){inp.focus();return;}const sk=$('skipBox');if(sk)sk.remove();const ok=checkAns(q,inp.value);inp.disabled=true;f.querySelector('button').disabled=true;if(hb)hb.disabled=true;record(q,ok);
   const r=o.onAnswer?o.onAnswer(ok):{};const label=r.label||'Continue';
   const fb=$(id+'fb');fb.className='fb '+(ok?'good':'bad');
@@ -994,13 +1298,13 @@ async function roll(power){if(busy||ctrlMode!=='idle')return;
  if(power){const q=makeQ(TOPICS[Math.min(5,regionOf(S.pos))],1);openDialog(head('Pathfinder','Power roll',true)+'<p class="story">Answer correctly to roll two dice and choose your move.</p><div id="qarea"></div>');
   askQ($('qarea'),q,{verb:'Answer',onAnswer:ok=>({label:ok?'Roll two dice':'Roll one die',note:ok?'':'No bonus this time. You still get a normal roll.'}),onContinue:async ok=>{closeDialog();if(ok){busy=true;renderControls();await spin(2);busy=false;ctrlMode='choose';renderControls();}else{doRoll();}}});return;}
  doRoll();}
-async function spin(n){const els=[$('die1')];for(let k=0;k<9;k++){dice=[R(1,6),R(1,6)];if(els[0]){els[0].classList.add('rolling');renderDie(els[0],dice[0]);}await sleep(70);}if(els[0])els[0].classList.remove('rolling');if(n===1)renderDie(els[0],dice[0]);}
+async function spin(n){sfx('dice');const els=[$('die1')];for(let k=0;k<9;k++){dice=[R(1,6),R(1,6)];if(els[0]){els[0].classList.add('rolling');renderDie(els[0],dice[0]);}await sleep(70);}if(els[0])els[0].classList.remove('rolling');sfx('thud');if(n===1)renderDie(els[0],dice[0]);}
 async function doRoll(){checkPiTime();if(S.cheats&&S.cheats.loaded){dice=[1,2,3,4,5,6];ctrlMode='choose';renderControls();return;}
  busy=true;renderControls();await spin(1);S.sixRun=dice[0]===6?(S.sixRun||0)+1:0;if(S.sixRun>=3){secret('sixes');S.sixRun=0;}await sleep(200);lastRoll=dice[0];moveBy(dice[0]);}
 function setMsg(t){rollMsg=t;const e=$('rollMsg');if(e)e.textContent=t;}
-async function moveBy(n){busy=true;renderControls();let moved=0;setMsg(`You rolled ${n}. Moving ${n} space${n>1?'s':''}…`);
- for(let i=0;i<n;i++){if(S.pos>=42)break;if(tileType(S.pos)==='G'&&!S.cleared[regionOf(S.pos)]){setMsg(`Stopped by the Guardian with ${n-i} space${n-i>1?'s':''} unused.`);break;}S.pos++;moved++;placeToken();if(n-i-1>0)setMsg(`You rolled ${n}. ${n-i-1} space${n-i-1>1?'s':''} to go…`);await sleep(320);}
- const t=tileType(S.pos),nm=t==='F'?'the Castle of Infinity':TILE_INFO[t][0];lucky=S.luck&&n>=5&&'BRQX'.includes(t);
+async function moveBy(n){busy=true;renderControls();let moved=0;S.prevPos=S.pos;setMsg(`You rolled ${n}. Moving ${n} space${n>1?'s':''}…`);
+ for(let i=0;i<n;i++){if(S.pos>=42)break;if(tileType(S.pos)==='G'&&!S.cleared[regionOf(S.pos)]){setMsg(`Stopped by the Guardian with ${n-i} space${n-i>1?'s':''} unused.`);break;}S.pos++;moved++;placeToken();sfx('step',i);if(n-i-1>0)setMsg(`You rolled ${n}. ${n-i-1} space${n-i-1>1?'s':''} to go…`);await sleep(320);}
+ const t=tileType(S.pos),nm=t==='F'?'the Castle of Infinity':TILE_INFO[t][0];lucky=S.luck&&n>=5&&'BRQX'.includes(t);if(lucky)setTimeout(()=>sfx('lucky'),250);
  if(!rollMsg.startsWith('Stopped'))rollMsg=`You rolled ${n} and landed on ${t==='F'?nm:'a '+nm.toLowerCase()} space.${lucky?' Lucky roll!':''}`;
  busy=false;save();renderAll();await sleep(150);land(moved);}
 function offerSkip(t){const L=lucky;lucky=false;if(!L||!'BRQX'.includes(t)||$('modal').hidden)return;
@@ -1038,16 +1342,16 @@ function fireProj(o){const ar=o.from.closest('.arena');if(!ar||RM.matches||!o.fr
  let tr=null;if(o.kind==='fire'||o.kind==='orb'){const t0=performance.now();tr=setInterval(()=>{const u=Math.min(1,(performance.now()-t0)/dur),[x,y]=pt(u);const d=document.createElement('div');d.className='trail';d.style.cssText=`left:${x}px;top:${y}px;background:${o.kind==='fire'?(Math.random()<.5?'#ffd34d':'#f3842a'):o.color}`;ar.appendChild(d);setTimeout(()=>d.remove(),470);},30);}
  p.animate(frames,{duration:dur,easing:'cubic-bezier(.35,.1,.65,1)'}).onfinish=()=>{clearInterval(tr);p.remove();burst(ar,x1,y1,o.blocked?'#3a8fd6':o.color);o.onHit();};}
 function strike(from,to,dmg,blocked,dir,proj){const a=$(from),b=$(to);if(!a||!b)return;const av=a.querySelector('.avatar,.mon'),bv=b.querySelector('.avatar,.mon');anim(av,dir==='r'?'lunge-r':'lunge-l');
- const land=()=>{if(!b.isConnected)return;anim(bv,blocked?'block':'hit');const n=document.createElement('div');n.className='dmg'+(blocked?' blocked':'');n.textContent=blocked?'Blocked!':'−'+dmg;b.appendChild(n);setTimeout(()=>n.remove(),1000);};
- setTimeout(()=>{if(!a.isConnected)return;fireProj(Object.assign({},proj||{kind:'orb',color:'#e2533c',sym:'!'},{from:av,to:bv,blocked,onHit:land}));},140);}
-function openBattle(kind,rr){const r=rr??regionOf(S.pos),reg=kind==='final'?FINAL:REGIONS[r],elite=kind==='elite';const name=kind==='battle'?P(reg.enemies):elite?reg.boss+' (Elite)':reg.boss;
+ const land=()=>{if(!b.isConnected)return;anim(bv,blocked?'block':'hit');sfx(blocked?'block':to==='heroBox'?'hurt':'hit');const n=document.createElement('div');n.className='dmg'+(blocked?' blocked':'');n.textContent=blocked?'Blocked!':'−'+dmg;b.appendChild(n);setTimeout(()=>n.remove(),1000);};
+ setTimeout(()=>{if(!a.isConnected)return;const pk=proj||{kind:'orb'};sfx(pk.kind==='fire'?(pk.big?'bigfire':'fire'):pk.kind);fireProj(Object.assign({},proj||{kind:'orb',color:'#e2533c',sym:'!'},{from:av,to:bv,blocked,onHit:land}));},140);}
+function openBattle(kind,rr){music(kind==='battle'?'battle':'boss');const r=rr??regionOf(S.pos),reg=kind==='final'?FINAL:REGIONS[r],elite=kind==='elite';const name=kind==='battle'?P(reg.enemies):elite?reg.boss+' (Elite)':reg.boss;
  const hp=kind==='final'?32:elite?20+r*3:kind==='boss'?14+r*3:5+r*2;const atk=(kind==='final'?7:elite?5+r:kind==='boss'?4+r:2+Math.floor(r/2))+(S.ng||0);
  const E={hp,max:hp};let hurt=false,turn=0,wrong=0;
  openDialog(head(kind==='battle'?'Battle':kind==='boss'?'Guardian of the gate':elite?'Elite rematch':'Final battle',esc(name))+`${elite?'<p class="small">Exam-level questions. Win with no mistakes for 3 stars, two or fewer for 2 stars.</p>':''}
  <div class="arena"><div class="fighter" id="heroBox">${avatar(true)}<div class="f-name">${esc(S.hero.name)}</div><div class="bar"><i id="bh"></i></div><div class="f-num num" id="bht"></div></div><div class="vs">VS</div>
  <div class="fighter" id="enemyBox">${monsterSVG(reg.color,hash(name),kind!=='battle')}<div class="f-name">${esc(name)}</div><div class="bar ehp"><i id="be"></i></div><div class="f-num num" id="bet"></div></div></div>
  <div class="battle-items" id="bitems"></div><div id="qarea"></div>`,elite?'elite':'flee');
-  let tk=0;$('enemyBox').style.cursor='pointer';$('enemyBox').onclick=()=>{tk++;const el=$('enemyBox');el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');if(tk===5){toast('Hee hee hee!',name+' giggles uncontrollably.');secret('tickle');}};
+  let tk=0;$('enemyBox').style.cursor='pointer';$('enemyBox').onclick=()=>{tk++;const el=$('enemyBox');el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');if(tk===5){sfx('giggle');toast('Hee hee hee!',name+' giggles uncontrollably.');secret('tickle');}};
  function bars(){$('bh').style.width=100*S.hero.hp/S.hero.maxHp+'%';$('bht').textContent=`HP ${S.hero.hp}/${S.hero.maxHp}`;$('be').style.width=100*E.hp/E.max+'%';$('bet').textContent=`HP ${E.hp}/${E.max} · hits for ${atk}`;
   const it=S.hero.items;$('bitems').innerHTML=`<span>Combo ${S.streak}${combo()?` (+${combo()} damage)`:''}</span>${elite?`<span>· Mistakes ${wrong}</span>`:''}${it.shield?`<span>· Shield ready</span>`:''}${it.potion&&S.hero.hp<S.hero.maxHp?`<button class="btn sm" id="bpot">Drink potion (${it.potion})</button>`:''}`;
   if($('bpot'))$('bpot').onclick=()=>{drink();bars();};}
@@ -1056,8 +1360,8 @@ function openBattle(kind,rr){const r=rr??regionOf(S.pos),reg=kind==='final'?FINA
   onAnswer(ok){if(ok){const d=S.cheats&&S.cheats.onehit?E.hp:heroDmg()+combo();E.hp=Math.max(0,E.hp-d);strike('heroBox','enemyBox',d,false,'r',HERO_PROJ[S.hero.cls]);bars();return {label:E.hp<=0?'Claim victory':'Next turn',note:`You strike for ${d} damage${combo()?' with your combo bonus':''}.`};}
    wrong++;const res=hurtHero(atk);if(!res.blocked)hurt=true;strike('enemyBox','heroBox',atk,res.blocked,'l',kind==='final'?{kind:'fire',big:true,color:'#d9381e'}:{kind:'orb',color:reg.color,sym:P(SYMS[r])});bars();return {label:S.hero.hp<=0?'Continue':'Next turn',note:res.blocked?(res.god?'Infinity mode: the hit bounces right off you.':'Your shield charm absorbs the blow.'):`${esc(name)} hits you for ${atk} damage.`};},
   onContinue(){if(E.hp<=0)win();else if(S.hero.hp<=0){if(elite)lose();else faint();}else next();}});}
- function lose(){S.hero.hp=S.hero.maxHp;save();challengeEnd({title:name,stars:0,gain:0,line:'You were knocked out this time. No gold is lost in the Challenge Hall, and your HP has been restored.',retry:()=>openBattle('elite',r)});}
- function win(){S.wins++;grant('first');if(!hurt)grant('flawless');bump('win',1);let gold,xp,extra='';
+ function lose(){music(null);sfx('defeat');S.hero.hp=S.hero.maxHp;save();challengeEnd({title:name,stars:0,gain:0,line:'You were knocked out this time. No gold is lost in the Challenge Hall, and your HP has been restored.',retry:()=>openBattle('elite',r)});}
+ function win(){music(null);sfx(kind==='boss'||kind==='final'?'fanfare':'victory');S.wins++;grant('first');if(!hurt)grant('flawless');bump('win',1);let gold,xp,extra='';
   if(elite){const st=wrong===0?3:wrong<=2?2:1;S.hero.hp=S.hero.maxHp;const gain=award(String(r),'elite',st,st);addLog(`Beat ${esc(name)} for ${st} star${st>1?'s':''}.`);save();
    challengeEnd({title:name,stars:st,gain,line:`Victory with ${wrong} mistake${wrong===1?'':'s'}. Your HP has been restored.`,retry:()=>openBattle('elite',r)});return;}
   if(kind==='battle'){gold=8+3*r+R(0,5);xp=10+5*r;addLog(`Defeated ${esc(name)} in ${reg.name}.`);}
@@ -1067,30 +1371,30 @@ function openBattle(kind,rr){const r=rr??regionOf(S.pos),reg=kind==='final'?FINA
   if(kind==='final'){openVictory();return;}
   openDialog(head('Victory',`${esc(name)} is defeated`,true)+extra+`<div class="rewards"><span class="reward num">+${gold} gold</span><span class="reward num">+${xp} XP</span>${!hurt?'<span class="reward">Flawless</span>':''}</div><div class="row"><button class="btn primary" id="done">Back to the map</button>${kind==='boss'?'<button class="btn" id="tohall">Open Challenge Hall</button>':''}</div>`);$('done').onclick=closeDialog;$('done').focus();if($('tohall'))$('tohall').onclick=openHall;}
  next();}
-function faint(){const lost=Math.floor(S.hero.gold/2);S.hero.gold-=lost;S.hero.hp=S.hero.maxHp;S.streak=0;S.pos=Math.min(regionOf(S.pos),5)*7;addLog(`Fainted and woke at camp. Lost ${lost} gold.`);save();
+function faint(){music(null);sfx('defeat');const lost=Math.floor(S.hero.gold/2);S.hero.gold-=lost;S.hero.hp=S.hero.maxHp;S.streak=0;const camp=campSpot(),far=S.pos-camp;setReturn(camp,`Knocked out! You were carried back ${far} space${far===1?'':'s'} to the camp.`);addLog(`Fainted and woke at camp. Lost ${lost} gold.`);save();
  openDialog(head('Knocked out','You wake by the campfire')+`<p class="story">The healers carried you back to camp and patched you up. You dropped ${lost} gold on the way. Look back at the working from that fight, then try again.</p><button class="btn primary" id="done">Get back up</button>`);$('done').onclick=closeDialog;$('done').focus();}
 function openTreasure(){const i=S.pos,r=regionOf(i);if(S.opened[i]){toast('Empty chest','You already opened this one.');return;}
  openDialog(head('Treasure','A locked chest',true)+`<div class="arena" style="grid-template-columns:1fr"><div class="fighter">${chestSVG()}</div></div><p class="story">The lock has a number dial. Solve the puzzle to open it.</p><div id="qarea"></div>`);
- askQ($('qarea'),makeQ(topicFor('battle'),pickLv('battle')),{verb:'Unlock',onAnswer(ok){if(!ok)return {label:'Back to the map',note:'The lock holds. Land here again to have another go.'};
-  S.opened[i]=true;S.chests++;bump('chest',1);if(S.chests>=3)grant('chest3');const g=15+5*r+R(0,10);S.hero.gold+=g;let note=`Inside you find ${g} gold`;if(Math.random()<.45){const k=P(['potion','scroll','shield']);S.hero.items[k]++;note+=` and a ${SHOP[k].name.toLowerCase()}`;}addXP(6);addLog(`Opened a chest in ${REGIONS[r].name}.`);save();return {label:'Back to the map',note:note+'.'};},onContinue:closeDialog});}
-function openTrap(){const r=regionOf(S.pos),dmg=3+r,trap=P(['A pit of spikes opens beneath you','A boulder rolls down the path','Poison darts fly from the walls','The bridge planks start to crack']);
+ askQ($('qarea'),(Math.random()<.35?wordQ:makeQ)(topicFor('battle'),pickLv('battle')),{verb:'Unlock',onAnswer(ok){if(!ok)return {label:'Back to the map',note:'The lock holds. Land here again to have another go.'};
+  S.opened[i]=true;S.chests++;sfx('chest');bump('chest',1);if(S.chests>=3)grant('chest3');const g=15+5*r+R(0,10);S.hero.gold+=g;let note=`Inside you find ${g} gold`;if(Math.random()<.45){const k=P(['potion','scroll','shield']);S.hero.items[k]++;note+=` and a ${SHOP[k].name.toLowerCase()}`;}addXP(6);addLog(`Opened a chest in ${REGIONS[r].name}.`);save();return {label:'Back to the map',note:note+'.'};},onContinue:closeDialog});}
+function openTrap(){sfx('trap');const r=regionOf(S.pos),dmg=3+r,trap=P(['A pit of spikes opens beneath you','A boulder rolls down the path','Poison darts fly from the walls','The bridge planks start to crack']);
  openDialog(head('Trap',trap)+`<p class="story">Answer correctly to escape unharmed. Get it wrong and you take ${dmg} damage.</p><div id="qarea"></div>`,'flee');
- askQ($('qarea'),makeQ(topicFor('battle'),pickLv('battle')),{verb:'Escape',onAnswer(ok){if(ok){S.hero.gold+=5;save();return {label:'Back to the map',note:'You escape and spot 5 gold on the ground.'};}const res=hurtHero(dmg);save();return {label:S.hero.hp<=0?'Continue':'Back to the map',note:res.blocked?(res.god?'Infinity mode: the trap can’t touch you.':'Your shield charm saves you.'):`Ouch. You take ${dmg} damage.`};},
+ askQ($('qarea'),makeQ(topicFor('battle'),pickLv('battle')),{verb:'Escape',onAnswer(ok){if(ok){S.hero.gold+=5;setTimeout(()=>sfx('coin'),250);save();return {label:'Back to the map',note:'You escape and spot 5 gold on the ground.'};}const res=hurtHero(dmg);sfx(res.blocked?'block':'hurt');if(!res.blocked&&S.hero.hp>0){const to=backSpot(),d=S.pos-to;setReturn(to,`The trap knocked you back ${d} space${d===1?'':'s'}.`);}save();return {label:S.hero.hp<=0?'Continue':'Back to the map',note:res.blocked?(res.god?'Infinity mode: the trap can’t touch you.':'Your shield charm saves you.'):`Ouch. You take ${dmg} damage.`};},
   onContinue(){if(S.hero.hp<=0)faint();else closeDialog();}});}
 function openQuest(){const r=regionOf(S.pos),reg=REGIONS[r];let i=0,c=0;const marks=[];
  openDialog(head('Quest',reg.name+' mission',true)+`<p class="story">${reg.quest}</p><div class="steps" id="qsteps"></div><div id="qarea"></div>`,'flee');
  const steps=()=>{$('qsteps').innerHTML=[0,1,2].map(k=>`<span class="${marks[k]===true?'ok':marks[k]===false?'no':''}"></span>`).join('');};
- function next(){steps();askQ($('qarea'),makeQ(reg.topic,pickLv('battle')),{tag:`Part ${i+1} of 3`,onAnswer(ok){if(ok)c++;marks[i]=ok;steps();return {label:i<2?'Next part':'Finish the quest'};},onContinue(){i++;if(i<3)next();else finish();}});}
- function finish(){const g=12*c,xp=8*c;S.hero.gold+=g;addXP(xp);let item='';if(c===3){grant('quest');const k=P(['potion','scroll','shield']);S.hero.items[k]++;item=`<span class="reward">${SHOP[k].name}</span>`;}addLog(`Finished a quest in ${reg.name}: ${c}/3.`);save();
-  openDialog(head('Quest complete',`${c} of 3 solved`,true)+`<p class="story">${c===3?'A perfect mission. The villagers give you a special reward.':c?'The job is done, though not perfectly. You are paid for what you got right.':'The mission failed this time. Review the working and try the next one.'}</p><div class="rewards"><span class="reward num">+${g} gold</span><span class="reward num">+${xp} XP</span>${item}</div><button class="btn primary" id="done">Back to the map</button>`);$('done').onclick=closeDialog;$('done').focus();}
+ function next(){steps();askQ($('qarea'),(Math.random()<.7?wordQ:makeQ)(reg.topic,pickLv('battle')),{tag:`Part ${i+1} of 3`,onAnswer(ok){if(ok)c++;marks[i]=ok;steps();return {label:i<2?'Next part':'Finish the quest'};},onContinue(){i++;if(i<3)next();else finish();}});}
+ function finish(){const g=12*c,xp=8*c;if(c<2){const to=backSpot(),d=S.pos-to;setReturn(to,`The quest failed, so you headed back ${d} space${d===1?'':'s'}.`);}S.hero.gold+=g;addXP(xp);let item='';if(c===3){grant('quest');const k=P(['potion','scroll','shield']);S.hero.items[k]++;item=`<span class="reward">${SHOP[k].name}</span>`;}addLog(`Finished a quest in ${reg.name}: ${c}/3.`);save();
+  openDialog(head('Quest complete',`${c} of 3 solved`,true)+`<p class="story">${c===3?'A perfect mission. The villagers give you a special reward.':c?'The job is done, though not perfectly. You are paid for what you got right.':'The mission failed this time. Review the working and try the next one.'}${c<2?' You fall back to the space you came from.':''}${''}</p><div class="rewards"><span class="reward num">+${g} gold</span><span class="reward num">+${xp} XP</span>${item}</div><button class="btn primary" id="done">Back to the map</button>`);$('done').onclick=closeDialog;$('done').focus();}
  next();}
 function runSprint(o){openDialog(head(o.eyebrow,o.title)+`<p class="story">${o.intro}</p>${o.goals?`<div class="goal-list">${o.goals}</div>`:''}<button class="btn primary" id="go">Start the clock</button>`);
- $('go').focus();$('go').onclick=()=>{if(o.flee)dlgMode='flee';let score=0,q;const miss=[],t0=Date.now();
+ $('go').focus();$('go').onclick=()=>{if(o.flee)dlgMode='flee';let score=0,q,lastSec=99;const miss=[],t0=Date.now();
   $('dialog').innerHTML=head(o.eyebrow,o.title)+`<div class="blitz-top"><div class="timer"><i id="tbar"></i></div><span class="num" id="tleft">${o.secs}s</span><span><b>Score</b> <b class="num" id="bscore">0</b></span></div><div id="bq"></div><div class="flash" id="flash" aria-live="polite"></div>`;
   function nq(){q=makeQ(o.topic(),o.lv());$('bq').innerHTML=`<div class="qbox"><div class="chips"><span class="chip">${TOPIC_NAMES[q.topic]}</span></div><p class="q-text">${q.text}</p>${q.img?`<div class="q-fig">${q.img}</div>`:''}<form class="ans-row" id="bf"><input class="ans" id="bi" autocomplete="off" spellcheck="false" placeholder="Answer" aria-label="Your answer"><button class="btn primary" type="submit">Go</button></form></div>`;$('bi').focus();
    $('bf').onsubmit=e=>{e.preventDefault();const v=$('bi').value;if(!v.trim())return;const ok=checkAns(q,v);record(q,ok);const fl=$('flash');if(ok){score++;fl.className='flash good';fl.textContent=P(PRAISE);}else{miss.push(q);fl.className='flash bad';fl.textContent='Answer was '+q.show.replace(/<[^>]+>/g,'');}$('bscore').textContent=score;nq();};}
   nq();
-  activeTimer=setInterval(()=>{const left=Math.max(0,o.secs-(Date.now()-t0)/1000);$('tbar').style.width=100*left/o.secs+'%';$('tleft').textContent=Math.ceil(left)+'s';if(left<=0){clearInterval(activeTimer);activeTimer=null;bump('timed',score,null,true);o.onEnd(score,miss);}},200);};}
+  activeTimer=setInterval(()=>{const left=Math.max(0,o.secs-(Date.now()-t0)/1000),cs=Math.ceil(left);if(cs<=5&&cs>0&&cs<lastSec){lastSec=cs;sfx('tick');}$('tbar').style.width=100*left/o.secs+'%';$('tleft').textContent=Math.ceil(left)+'s';if(left<=0){clearInterval(activeTimer);activeTimer=null;sfx('buzzer');bump('timed',score,null,true);o.onEnd(score,miss);}},200);};}
 function missList(miss){return miss.length?`<p class="small">Review the ones you missed:</p><ol class="misses">${miss.slice(0,5).map(x=>`<li>${x.text}<br><b>${x.show}</b>. ${x.exp}</li>`).join('')}</ol>`:'';}
 function openBlitz(){const r=regionOf(S.pos),reg=REGIONS[r],secs=45+(S.hero.cls==='ranger'?15:0);
  runSprint({flee:true,eyebrow:'Blitz challenge',title:'Beat the clock',secs,intro:`Answer as many ${TOPIC_NAMES[reg.topic].toLowerCase()} questions as you can in ${secs} seconds. Each correct answer earns 3 gold. Your best is ${S.blitzBest}.`,topic:()=>reg.topic,lv:()=>Math.min(2,pickLv('battle')),
@@ -1100,8 +1404,8 @@ function openCamp(){const h=S.hero,r=regionOf(S.pos);
  openDialog(head('Camp',`${REGIONS[Math.min(r,5)].name} campfire`,true)+`<p class="story">Rest by the fire and stock up before the road ahead. If you are knocked out in this region, you will wake up here.</p><div class="row"><button class="btn primary" id="rest" ${h.hp>=h.maxHp?'disabled':''}>${h.hp>=h.maxHp?'Already at full health':'Rest and heal to full'}</button><span class="small num" id="campgold">Gold: ${h.gold}</span></div>
  <h4>Merchant</h4><div class="shop">${Object.entries(SHOP).map(([k,v])=>`<div class="shop-row">${itemIcon(k)}<div><b>${v.name}</b>${v.desc} You have ${h.items[k]}.</div><button class="btn sm" data-buy="${k}" ${h.gold<v.price?'disabled':''}><span class="num">${v.price}</span> gold</button></div>`).join('')}</div>${travelHTML(Math.min(r,5))}<button class="btn" id="done">Back to the road</button>`);
  wireTravel();
- $('rest').onclick=()=>{h.hp=h.maxHp;save();renderHUD();toast('Rested','You are at full health.');openCamp();};
- document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const k=b.dataset.buy;if(h.gold<SHOP[k].price)return;h.gold-=SHOP[k].price;h.items[k]++;save();renderAll();toast('Bought',SHOP[k].name);openCamp();});
+ $('rest').onclick=()=>{h.hp=h.maxHp;sfx('heal');save();renderHUD();toast('Rested','You are at full health.');openCamp();};
+ document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const k=b.dataset.buy;if(h.gold<SHOP[k].price)return;h.gold-=SHOP[k].price;h.items[k]++;sfx('coin');save();renderAll();toast('Bought',SHOP[k].name);openCamp();});
  $('done').onclick=closeDialog;}
 function openVictory(){const tot=TOPICS.reduce((s,t)=>s+S.stats[t].a,0),cor=TOPICS.reduce((s,t)=>s+S.stats[t].c,0);
  openDialog(head('Numeria is saved',`${esc(S.hero.name)}, Champion of Numeria`,true)+`<div class="arena" style="grid-template-columns:1fr"><div class="fighter">${monsterSVG(FINAL.color,7,true)}<div class="f-name">The Infinity Dragon has fallen</div></div></div>
@@ -1113,7 +1417,7 @@ function openVictory(){const tot=TOPICS.reduce((s,t)=>s+S.stats[t].a,0),cor=TOPI
 /* ---------------- Fast travel ---------------- */
 function travelHTML(cur){const d=REGIONS.map((reg,i)=>({reg,i})).filter(({i})=>(i===0||S.cleared[i-1])&&i!==cur);if(!d.length)return '';
  return `<h4>Fast travel</h4><p class="small">Jump to another region’s camp. Chests in cleared regions refill when you arrive.</p><div class="row">${d.map(x=>`<button class="btn sm" type="button" data-travel="${x.i}">${x.reg.name}</button>`).join('')}</div>`;}
-function wireTravel(){document.querySelectorAll('[data-travel]').forEach(b=>b.onclick=()=>{const i=+b.dataset.travel;S.pos=i*7;if(S.cleared[i])for(let k=i*7;k<i*7+6;k++)delete S.opened[k];addLog(`Travelled to ${REGIONS[i].name}.`);save();closeDialog();toast('Fast travel',`You arrive at the ${REGIONS[i].name} camp.`);});}
+function wireTravel(){document.querySelectorAll('[data-travel]').forEach(b=>b.onclick=()=>{const i=+b.dataset.travel;sfx('warp');S.pos=i*7;if(S.cleared[i])for(let k=i*7;k<i*7+6;k++)delete S.opened[k];addLog(`Travelled to ${REGIONS[i].name}.`);save();closeDialog();toast('Fast travel',`You arrive at the ${REGIONS[i].name} camp.`);});}
 
 /* ---------------- Challenge Hall ---------------- */
 const MODES={
@@ -1131,7 +1435,7 @@ const hallName=key=>key==='mix'?'Mixed Arena':REGIONS[+key].name;
 function award(key,mode,score,stars){const k=key+':'+mode;S.scores[k]=Math.max(S.scores[k]||0,score);const prev=S.stars[k]||0;let gain=0;
  if(stars>prev){gain=stars-prev;S.stars[k]=stars;S.hero.gold+=20*gain;addXP(10*gain);bump('star',gain);}
  const t=totalStars();if(t>=10)grant('stars10');if(t>=45)grant('stars45');save();return gain;}
-function challengeEnd(o){openDialog(head('Challenge complete',esc(o.title),true)+`<div class="stars big" role="img" aria-label="${o.stars} of 3 stars">${starStr(o.stars)}</div><p class="story">${o.line}</p>
+function challengeEnd(o){if(o.gain)setTimeout(()=>sfx('star',o.stars),350);else if(!o.stars)sfx('defeat');openDialog(head('Challenge complete',esc(o.title),true)+`<div class="stars big" role="img" aria-label="${o.stars} of 3 stars">${starStr(o.stars)}</div><p class="story">${o.line}</p>
  <div class="rewards">${o.gain?`<span class="reward">+${o.gain} new star${o.gain>1?'s':''}</span><span class="reward num">+${20*o.gain} gold</span>`:'<span class="reward">No new stars this time</span>'}</div>${missList(o.miss||[])}
  <div class="row"><button class="btn primary" id="again">Try again</button><button class="btn" id="tohall">Challenge Hall</button></div>`);
  $('again').onclick=o.retry;$('tohall').onclick=openHall;$('again').focus();}
@@ -1165,7 +1469,7 @@ function openHall(){if(!S)return;ensureBounties();closeDrawer();const tot=totalS
  <h4>Region challenges</h4>${cards}${mix}${travelHTML(-1)}
  <button class="btn" id="done" type="button">Back to the map</button></div>`);
  document.querySelectorAll('[data-launch]').forEach(b=>b.onclick=()=>{const [k,m]=b.dataset.launch.split('|');launch(k,m);});
- document.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{const x=S.bounties[+b.dataset.claim];if(!x||!x.done)return;S.hero.gold+=x.gold;addXP(x.xp);S.bountiesDone++;if(S.bountiesDone>=5)grant('bounty5');addLog(`Bounty claimed: ${x.text}.`);S.bounties.splice(+b.dataset.claim,1);ensureBounties();save();renderHUD();toast('Bounty claimed',`+${x.gold} gold`);openHall();});
+ document.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{const x=S.bounties[+b.dataset.claim];if(!x||!x.done)return;S.hero.gold+=x.gold;sfx('coin');addXP(x.xp);S.bountiesDone++;if(S.bountiesDone>=5)grant('bounty5');addLog(`Bounty claimed: ${x.text}.`);S.bounties.splice(+b.dataset.claim,1);ensureBounties();save();renderHUD();toast('Bounty claimed',`+${x.gold} gold`);openHall();});
  wireTravel();$('done').onclick=closeDialog;}
 function newBounty(){const ts=TOPICS.filter((_,i)=>i===0||S.cleared[i-1]),opts=['topic','topic','combo','win','timed','chest'];if(S.cleared.some(Boolean))opts.push('star','star');
  for(let t=0;t<30;t++){const k=P(opts);let b;
@@ -1186,11 +1490,109 @@ function setTab(t){document.querySelectorAll('#drawer .panel').forEach(p=>p.hidd
 function openDrawer(){if(!S)return;renderSheet();$('drawer').hidden=false;$('veil').hidden=false;$('menuBtn').setAttribute('aria-expanded','true');$('drawerClose').focus();}
 function closeDrawer(){$('drawer').hidden=true;$('veil').hidden=true;$('menuBtn').setAttribute('aria-expanded','false');}
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
-$('menuBtn').onclick=openDrawer;$('drawerClose').onclick=closeDrawer;$('veil').onclick=closeDrawer;
+$('menuBtn').onclick=openDrawer;
+$('sndBtn').onclick=()=>{SND.muted=!SND.muted;if(!SND.muted){actx();if(!SND.sfx&&!SND.music)SND.sfx=true;}applySound();if(!$('drawer').hidden)renderSheet();sfx('coin');};
+renderSndBtn();$('drawerClose').onclick=closeDrawer;$('veil').onclick=closeDrawer;
 $('hallBtn').onclick=()=>{if(!S||busy||!$('modal').hidden)return;openHall();};
+$('practiceBtn').onclick=()=>{if(!S||busy||!$('modal').hidden)return;openPractice();};
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('drawer').hidden)closeDrawer();else if(!$('modal').hidden)tryClose();});
 $('dlgX').onclick=tryClose;
 setTab('heroPanel');
+
+
+
+/* ---------------- Practice room ---------------- */
+let PR=null;const prSel={t:null,sub:'all',n:10,lv:null,style:'mixed'};
+const STYLES=[['mixed','Mixed'],['word','Word problems'],['quick','Quick questions']];
+function weakestSub(){let w=null;for(const [k,v] of Object.entries(S.subs||{})){if(v.a<3)continue;const p=v.c/v.a;if(p<.8&&(!w||p<w.p)){const [t,sub]=k.split('|');if(GEN[t])w={t,sub,p};}}return w;}
+function openPractice(t,sub){if(!S)return;closeDrawer();if(t){prSel.t=t;prSel.sub=sub||'all';}
+ if(!prSel.t){const w=weakestSub();prSel.t=w?w.t:TOPICS[Math.min(regionOf(S.pos),5)];}if(prSel.lv==null)prSel.lv={gentle:1,standard:2,exam:3}[S.diff]||2;
+ const subs=subIndex(prSel.t,prSel.style);if(prSel.sub!=='all'&&!subs[prSel.sub])prSel.sub='all';const acc=v=>v&&v.a?Math.round(100*v.c/v.a)+'%':'';
+ const keep=$('modal').hidden?0:$('modal').scrollTop;
+ openDialog(head('Practice room','Pick a topic to practise',true)+`<p class="small">No monsters, no damage and no clock. Hints are free, and every answer shows the working. Correct answers still earn XP and count in your skill book.</p>
+ <div class="field">Topic<div class="ptopics">${TOPICS.map((tp,i)=>{const st=S.stats[tp];return `<button type="button" class="ptopic" data-pt="${tp}" aria-pressed="${prSel.t===tp}"><span class="swatch" style="--rc:${REGIONS[i].color}"></span><b>${TOPIC_NAMES[tp]}</b><span class="small">${st.a?acc(st)+' correct':'Not tried yet'}</span></button>`;}).join('')}</div></div>
+ <div class="field">Question style<div class="seg" role="group" aria-label="Question style">${STYLES.map(([k,l])=>`<button type="button" data-pst="${k}" aria-pressed="${prSel.style===k}">${l}</button>`).join('')}</div><span class="small">${prSel.style==='word'?'Real-life problems that take a few steps. Read carefully and pick out the numbers you need.':prSel.style==='quick'?'Short questions to practise one skill at a time.':'A mix of quick questions and word problems.'}</span></div>
+ <div class="field">Focus on<span class="small">${Object.keys(subs).length} subtopics${prSel.style==='word'?' with word problems':''} in ${TOPIC_NAMES[prSel.t].toLowerCase()}. Your score shows once you’ve tried one.</span><div class="seg psubs" role="group" aria-label="Subtopic">${['all',...Object.keys(subs)].map(sb=>{const v=sb==='all'?null:S.subs[prSel.t+'|'+sb];return `<button type="button" data-ps="${esc(sb)}" aria-pressed="${prSel.sub===sb}">${sb==='all'?'Everything':esc(sb)}${acc(v)?` <span class="pct">${acc(v)}</span>`:''}</button>`;}).join('')}</div></div>
+ <div class="field">How many questions?<div class="seg" role="group" aria-label="Number of questions">${[5,10,20,0].map(n=>`<button type="button" data-pn="${n}" aria-pressed="${prSel.n===n}">${n||'Keep going'}</button>`).join('')}</div></div>
+ <div class="field">Level<div class="seg" role="group" aria-label="Level">${[[1,'Warm-up'],[2,'Standard'],[3,'Exam style']].map(([v,l])=>`<button type="button" data-pl="${v}" aria-pressed="${prSel.lv===v}">${l}</button>`).join('')}</div></div>
+ <div class="row"><button class="btn primary" id="prGo" type="button">Start practising</button><button class="btn" id="done" type="button">Back to the map</button></div>`);
+ $('modal').scrollTop=keep;
+ document.querySelectorAll('[data-pt]').forEach(b=>b.onclick=()=>{prSel.t=b.dataset.pt;prSel.sub='all';openPractice();});
+ document.querySelectorAll('[data-pst]').forEach(b=>b.onclick=()=>{prSel.style=b.dataset.pst;openPractice();});
+ document.querySelectorAll('[data-ps]').forEach(b=>b.onclick=()=>{prSel.sub=b.dataset.ps;document.querySelectorAll('[data-ps]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});
+ document.querySelectorAll('[data-pn]').forEach(b=>b.onclick=()=>{prSel.n=+b.dataset.pn;document.querySelectorAll('[data-pn]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});
+ document.querySelectorAll('[data-pl]').forEach(b=>b.onclick=()=>{prSel.lv=+b.dataset.pl;document.querySelectorAll('[data-pl]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});
+ $('prGo').onclick=()=>startPractice({t:prSel.t,sub:prSel.sub,n:prSel.n,lv:prSel.lv,style:prSel.style});$('done').onclick=closeDialog;}
+function startPractice(cfg,pool){PR={...cfg,i:0,score:0,streak:0,miss:[],bySub:{},last:'',pool:pool||null};runPractice();}
+function runPractice(){const sub=PR.pool?P(PR.pool):PR.sub,q=practiceQ(PR.t,sub,PR.lv,PR.last,PR.style||'mixed'),total=PR.n;PR.last=q.text;
+ const focus=(PR.pool?'Retrying your mistakes':PR.sub==='all'?'Everything':esc(PR.sub))+(PR.style==='word'?' · Word problems':PR.style==='quick'?' · Quick questions':'');
+ openDialog(head('Practice',`${TOPIC_NAMES[PR.t]} · ${focus}`,true)+`<div class="pr-top"><div class="bar pr-bar" role="img" aria-label="Progress"><i style="width:${total?100*PR.i/total:0}%"></i></div><span class="small num">${total?`Question ${PR.i+1} of ${total}`:`Question ${PR.i+1}`} · ${PR.score} correct${PR.streak>=2?` · ${PR.streak} in a row`:''}</span>${PR.i>0?'<button class="btn sm" id="prEnd" type="button">Finish</button>':''}</div><div id="qarea"></div>`);
+ if($('prEnd'))$('prEnd').onclick=endPractice;
+ askQ($('qarea'),q,{freeHint:true,verb:'Check',onAnswer(ok){PR.i++;const b=PR.bySub[q.sub]=PR.bySub[q.sub]||{c:0,a:0};b.a++;if(ok){PR.score++;PR.streak++;b.c++;}else{PR.streak=0;PR.miss.push(q);}
+   return {label:total&&PR.i>=total?'See results':'Next question',note:ok&&PR.streak>=3?`${PR.streak} in a row!`:''};},
+  onContinue(){if(total&&PR.i>=total)endPractice();else runPractice();}});}
+function endPractice(){const R_=PR;if(!R_||!R_.i){closeDialog();return;}S.practiced=(S.practiced||0)+1;if(R_.i>=10)grant('practice');const pc=Math.round(100*R_.score/R_.i);
+ addLog(`Practised ${TOPIC_NAMES[R_.t]}: ${R_.score}/${R_.i} correct.`);save();sfx(pc>=80?'victory':pc>=50?'coin':'heal');
+ const rows=Object.entries(R_.bySub).sort((a,b)=>a[1].c/a[1].a-b[1].c/b[1].a),subsMissed=[...new Set(R_.miss.map(q=>q.sub))];
+ const msg=pc>=80?'Brilliant work. You really know this.':pc>=50?'Good progress. Read the working for the ones you missed, then retry them.':'Keep going. Read the working below for each one you missed, then retry them.';
+ openDialog(head('Practice complete',`${R_.score} out of ${R_.i} correct`,true)+`<div class="pr-score"><span class="num">${pc}%</span><div class="bar" role="img" aria-label="${pc} percent"><i style="width:${pc}%"></i></div></div><p class="story">${msg}</p>
+ ${rows.length>1?`<h4>By subtopic</h4><div class="pr-subs">${rows.map(([k,v])=>`<div class="skill"><span>${esc(k)}</span><div class="bar"><i style="width:${100*v.c/v.a}%"></i></div><span class="pct num">${v.c}/${v.a}</span></div>`).join('')}</div>`:''}
+ ${missList(R_.miss)}
+ <div class="row">${R_.miss.length?`<button class="btn primary" id="prMiss" type="button">Retry my mistakes</button>`:''}<button class="btn ${R_.miss.length?'':'primary'}" id="prAgain" type="button">Practise again</button><button class="btn" id="prPick" type="button">Choose another topic</button><button class="btn" id="done" type="button">Back to the map</button></div>
+ ${R_.miss.length?`<p class="small">“Retry my mistakes” gives you fresh questions on ${subsMissed.length===1?esc(subsMissed[0]):'the subtopics you missed'}.</p>`:''}`);
+ if($('prMiss'))$('prMiss').onclick=()=>startPractice({t:R_.t,sub:R_.sub,lv:R_.lv,style:R_.style,n:Math.max(5,Math.min(20,R_.miss.length*2))},subsMissed);
+ $('prAgain').onclick=()=>startPractice({t:R_.t,sub:R_.sub,lv:R_.lv,n:R_.n,style:R_.style});$('prPick').onclick=()=>openPractice();$('done').onclick=closeDialog;$((R_.miss.length?'prMiss':'prAgain')).focus();}
+
+/* ---------------- Sound studio ---------------- */
+const SOUND_SLOTS=[
+ ['Board',[['dice','Dice roll'],['step','Moving a space'],['lucky','Lucky roll']]],
+ ['Answers',[['correct','Correct answer'],['wrong','Wrong answer']]],
+ ['Battle',[['sword','Knight attack'],['fire','Mage attack'],['arrow','Ranger attack'],['orb','Monster attack'],['bigfire','Dragon attack'],['hit','Monster is hit'],['hurt','Hero is hit'],['block','Shield block']]],
+ ['Results',[['victory','Battle won'],['fanfare','Guardian beaten'],['defeat','Knocked out']]],
+ ['Rewards',[['levelup','Level up'],['coin','Gold'],['chest','Chest opens'],['achieve','Achievement'],['secret','Secret found'],['star','Star earned']]],
+ ['Timers',[['tick','Countdown tick'],['buzzer','Time’s up']]],
+ ['Other',[['drink','Drink a potion'],['heal','Rest at camp'],['trap','Trap'],['warp','Warp'],['flee','Run away'],['giggle','Monster giggle'],['click','Button click']]],
+ ['Music (loops)',[['music_map','Main game music (loops all game)'],['music_battle','Battle music (when “Battle music in fights” is on)'],['music_boss','Guardian and dragon music (when “Battle music in fights” is on)']]]
+];
+const SLOT_NAME=Object.fromEntries(SOUND_SLOTS.flatMap(g=>g[1]));
+function decode(ab){return new Promise(res=>{try{const O=window.OfflineAudioContext||window.webkitOfflineAudioContext;if(!O)return res(null);dctx=dctx||new O(1,1,44100);const pr=dctx.decodeAudioData(ab,b=>res(b),()=>res(null));if(pr&&pr.then)pr.then(res,()=>res(null));}catch(e){res(null);}});}
+function idbOpen(){return new Promise(res=>{try{const r=indexedDB.open('numeria-quest',1);r.onupgradeneeded=()=>r.result.createObjectStore('sounds');r.onsuccess=()=>{idb=r.result;res(idb);};r.onerror=()=>res(null);}catch(e){res(null);}});}
+function idbDo(mode,fn){return new Promise(res=>{if(!idb)return res(null);try{const tx=idb.transaction('sounds',mode),rq=fn(tx.objectStore('sounds'));tx.oncomplete=()=>res(rq?rq.result:true);tx.onerror=tx.onabort=()=>res(null);}catch(e){res(null);}});}
+function refreshMusic(k){if(k.startsWith('music_')&&musKey===k.slice(6)){const kk=musKey;stopMusic();musKey=null;setMusic(kk);}}
+async function loadCustomSounds(){
+ if(/^https?:$/.test(location.protocol)){try{const r=await fetch('sounds/sounds.json',{cache:'no-cache'});if(r.ok){const man=await r.json();
+   await Promise.all(Object.entries(man||{}).map(async([k,f])=>{if(!SLOT_NAME[k]||!f||typeof f!=='string')return;try{const a=await fetch('sounds/'+encodeURI(f));if(!a.ok)return;const buf=await decode(await a.arrayBuffer());if(buf){PACK[k]={buf,name:f};refreshMusic(k);}}catch(e){}}));}}catch(e){}}
+ await idbOpen();const keys=(await idbDo('readonly',st=>st.getAllKeys()))||[];
+ for(const k of keys){const rec=await idbDo('readonly',st=>st.get(k));if(rec&&rec.data){const buf=await decode(rec.data.slice(0));if(buf){MINE[k]={buf,name:rec.name||'your file'};refreshMusic(k);}}}}
+const srcOf=k=>MINE[k]?'mine':PACK[k]?'pack':'built';
+function packJSON(){const o={};SOUND_SLOTS.forEach(g=>g[1].forEach(([k])=>{if(MINE[k])o[k]=MINE[k].name;else if(PACK[k])o[k]=PACK[k].name;}));return JSON.stringify(o,null,2);}
+function openStudio(){closeDrawer();const keep=$('modal').hidden?0:$('modal').scrollTop,tag={mine:'Your file',pack:'Class sound pack',built:'Built-in'},n=Object.keys(MINE).length;
+ openDialog(head('Sound studio','Choose your own sounds',true)+`<p class="small">Pick an audio file (MP3, WAV, OGG or M4A) from your device for any sound. It replaces the built-in sound on this device. Effects up to 3 MB, music up to 10 MB.${idb?'':' <b>This browser can’t store sound files, so your choices will be lost when you close the game.</b>'}</p>
+ <div class="studio">${SOUND_SLOTS.map(([g,rows])=>`<h4>${g.toUpperCase()}</h4>${rows.map(([k,nm])=>{const sc=srcOf(k);return `<div class="srow"><div class="sname"><b>${nm}</b><span class="stag ${sc}">${tag[sc]}${sc!=='built'?': '+esc((MINE[k]||PACK[k]).name):''}</span></div><button class="btn sm" type="button" data-play="${k}">${previewKey===k?'Stop':'Play'}</button><button class="btn sm" type="button" data-pick="${k}">Choose file</button><input type="file" id="up_${k}" accept="audio/*,.mp3,.wav,.ogg,.m4a" data-up="${k}" hidden>${MINE[k]?`<button class="btn sm" type="button" data-reset="${k}">Reset</button>`:''}</div>`;}).join('')}`).join('')}</div>
+ <details class="share" id="shareBox"><summary>Share sounds with all your students</summary>
+ <p class="small">Sounds you choose here only play on this device. To give every student the same sounds, add them to your GitHub repository:</p>
+ <ol><li>In your <b>numeria-quest</b> repository, choose <b>Add file → Upload files</b>. Type <code>sounds/</code> before the file names, or upload into a folder called <code>sounds</code>.</li>
+ <li>Upload your audio files into that <code>sounds</code> folder.</li>
+ <li>Upload a file called <code>sounds.json</code> into the same folder, containing the text below. It tells the game which file goes with which sound.</li>
+ <li>Everyone who plays from your GitHub link will hear the new sounds. A student’s own uploads still win on their device.</li></ol>
+ <label class="small" for="packTxt">sounds.json (made from the files you chose above; file names must match exactly)</label><textarea id="packTxt" readonly>${esc(n||Object.keys(PACK).length?packJSON():'{\n  "correct": "my-correct-sound.mp3",\n  "music_map": "my-map-music.mp3"\n}')}</textarea>
+ <div class="row"><button class="btn sm" id="copyPack" type="button">Copy text</button><span class="small" id="copyMsg" aria-live="polite"></span></div></details>
+ <div class="row"><button class="btn primary" id="done" type="button">Done</button>${n?'<button class="btn sm danger" id="resetAll" type="button">Reset all my sounds</button>':''}</div>`);
+ $('modal').scrollTop=keep;
+ document.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>$('up_'+b.dataset.pick).click());
+ document.querySelectorAll('[data-up]').forEach(inp=>inp.onchange=()=>uploadSound(inp.dataset.up,inp.files&&inp.files[0]));
+ document.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>{const k=b.dataset.play;if(SND.muted){SND.muted=false;applySound();toast('Sound on','Sound was muted, so it has been turned back on.');}actx();
+  if(k.startsWith('music_')){if(previewKey===k){previewKey=null;stopMusic();musKey=null;music(wantMusic);}else{previewKey=k;stopMusic();musKey=null;setMusic(k.slice(6));}openStudio();}
+  else{if(previewKey){previewKey=null;stopMusic();musKey=null;music(wantMusic);openStudio();}playSound(k,k==='star'?3:k==='step'?4:0);}});
+ document.querySelectorAll('[data-reset]').forEach(b=>b.onclick=async()=>{const k=b.dataset.reset;delete MINE[k];await idbDo('readwrite',st=>st.delete(k));refreshMusic(k);toast('Sound reset',`${SLOT_NAME[k]} is back to ${PACK[k]?'the class sound pack':'the built-in sound'}.`);openStudio();});
+ if($('resetAll'))$('resetAll').onclick=async()=>{if($('resetAll').dataset.sure!=='1'){$('resetAll').dataset.sure='1';$('resetAll').textContent='Tap again to reset all';return;}Object.keys(MINE).forEach(k=>{delete MINE[k];refreshMusic(k);});await idbDo('readwrite',st=>st.clear());toast('Sounds reset','All your sounds are back to normal.');openStudio();};
+ $('copyPack').onclick=()=>{const t=$('packTxt');const ok=()=>{$('copyMsg').textContent='Copied.';};try{navigator.clipboard.writeText(t.value).then(ok,()=>{t.select();$('copyMsg').textContent='Press Ctrl+C (or ⌘+C) to copy.';});}catch(e){t.select();$('copyMsg').textContent='Press Ctrl+C (or ⌘+C) to copy.';}};
+ $('done').onclick=closeDialog;}
+async function uploadSound(k,file){if(!file)return;const max=k.startsWith('music_')?10:3;if(file.size>max*1048576){toast('That file is too big',`Choose a file under ${max} MB.`);return;}
+ let data;try{data=await file.arrayBuffer();}catch(e){toast('Couldn’t read that file','Try choosing it again.');return;}
+ const buf=await decode(data.slice(0));if(!buf){toast('That file won’t play','Try an MP3 or WAV file instead.');return;}
+ MINE[k]={buf,name:file.name};const stored=await idbDo('readwrite',st=>st.put({name:file.name,data},k));refreshMusic(k);
+ toast('Sound saved',`${file.name} now plays for “${SLOT_NAME[k]}”.${stored?'':' It will be lost when you close the game.'}`);if(SND.muted){SND.muted=false;applySound();}actx();if(!k.startsWith('music_'))playSound(k);openStudio();}
 
 /* ---------------- Secrets & cheat codes ---------------- */
 const SECRETS={
@@ -1208,7 +1610,7 @@ const SECRETS={
 const FAMOUS=[['pythagoras','Pythagoras! The Right-Angle Titan is nervous already.'],['euclid','Euclid, father of geometry, joins the quest.'],['archimedes','Archimedes! Eureka!'],['newton','Sir Isaac Newton has arrived. Mind the apples.'],['lovelace','Ada Lovelace, the first programmer, is ready.'],['turing','Alan Turing, code-breaker extraordinaire.'],['hypatia','Hypatia of Alexandria takes up the challenge.'],['fibonacci','Fibonacci! 1, 1, 2, 3, 5, 8… adventure!'],['gauss','Gauss, prince of mathematicians, sets out.'],['noether','Emmy Noether, master of algebra, arrives.'],['katherine johnson','Katherine Johnson, whose maths sent rockets to the Moon.']];
 const TOGGLES={god:'Infinity mode (no damage)',onehit:'Divide by zero (one-hit wins)',big:'Big head',rainbow:'Rainbow hero',loaded:'Loaded dice'};
 const cheatsOn=()=>!!S&&Object.values(S.cheats||{}).some(Boolean);
-function secret(id){if(!S||S.secrets[id])return;S.secrets[id]=true;S.hero.gold+=25;addLog(`Found a secret: ${SECRETS[id][0]}.`);save();toast('Secret found!',`${SECRETS[id][0]} · +25 gold (${Object.keys(S.secrets).length}/${Object.keys(SECRETS).length})`);renderHUD();renderSheet();}
+function secret(id){if(!S||S.secrets[id])return;S.secrets[id]=true;sfx('secret');S.hero.gold+=25;addLog(`Found a secret: ${SECRETS[id][0]}.`);save();toast('Secret found!',`${SECRETS[id][0]} · +25 gold (${Object.keys(S.secrets).length}/${Object.keys(SECRETS).length})`);renderHUD();renderSheet();}
 function checkPiTime(){const d=new Date();if(d.getHours()%12===3&&d.getMinutes()===14)secret('piTime');}
 function applyCode(raw){const c=String(raw).toUpperCase().replace(/[^A-Z0-9.]/g,'');const h=S.hero;let msg=null;
  const toggle=k=>{S.cheats[k]=!S.cheats[k];return `${TOGGLES[k]} ${S.cheats[k]?'ON':'OFF'}.`;};
@@ -1231,7 +1633,7 @@ function applyCode(raw){const c=String(raw).toUpperCase().replace(/[^A-Z0-9.]/g,
  if(!msg)return {ok:false,msg:'Nothing happens. That code isn’t recognised.'};
  S.cheatUses=(S.cheatUses||0)+1;addLog(`Used cheat code ${c}.`);save();secret('cheater');renderAll();return {ok:true,msg};}
 function openWarp(){openDialog(head('Warp','Where to?',true)+`<p class="story">The ground shimmers. Pick a destination.</p><div class="row">${REGIONS.map((r,i)=>`<button class="btn sm" data-warp="${i*7}">${r.name}</button>`).join('')}<button class="btn sm" data-warp="42">Castle of Infinity</button></div><button class="btn" id="done">Stay put</button>`);
- document.querySelectorAll('[data-warp]').forEach(b=>b.onclick=()=>{S.pos=+b.dataset.warp;addLog('Warped across Numeria.');save();closeDialog();toast('Warp','Whoosh!');});$('done').onclick=closeDialog;}
+ document.querySelectorAll('[data-warp]').forEach(b=>b.onclick=()=>{sfx('warp');S.pos=+b.dataset.warp;addLog('Warped across Numeria.');save();closeDialog();toast('Warp','Whoosh!');});$('done').onclick=closeDialog;}
 function renderCodes(){const el=$('codesPanel');if(!el||!S)return;const on=Object.keys(TOGGLES).filter(k=>S.cheats[k]);const n=Object.keys(S.secrets).length;
  el.innerHTML=`<h3>Secret codes</h3><p class="small">Know a code? Type it in.</p><form class="ans-row" id="codeF"><input class="ans" id="codeIn" autocomplete="off" spellcheck="false" placeholder="Enter code" aria-label="Cheat code" style="font-size:16px;text-transform:uppercase"><button class="btn primary" type="submit">Enter</button></form><p class="small" id="codeMsg" aria-live="polite"></p>
  ${on.length?`<h3>Active cheats</h3><div class="cheat-row">${on.map(k=>`<button class="btn sm" type="button" data-off="${k}">${TOGGLES[k]} · turn off</button>`).join('')}</div>`:''}
@@ -1263,8 +1665,8 @@ function openStart(){let cls='knight',diff='standard';const av={type:'knight',bg
  $('startF').noValidate=true;$('startF').onsubmit=e=>{e.preventDefault();const n=$('heroName').value.trim();if(!n){$('nameErr').hidden=false;const hn=$('heroName');hn.classList.remove('bad');void hn.offsetWidth;hn.classList.add('bad');hn.focus();return;}try{S=freshState(n,cls,diff);S.hero.av={...av};ensureBounties();const fam=FAMOUS.find(f=>n.toLowerCase().includes(f[0]));addLog(`${esc(n)} the ${CLASSES[cls].name} sets out from Number Meadows.`);save();closeDialog();toast('Your quest begins','Roll the die to move along the path.');if(fam){['potion','scroll','shield'].forEach(k=>S.hero.items[k]++);toast('A famous name!',fam[1]+' You receive one of every item.');secret('famous');}checkPiTime();}catch(err){showErr(err);}};}
 
 /* ---------------- Boot ---------------- */
-function start(data){renderLegend();S=(data&&data.S&&data.S.hero)?data.S:load();
- if(!S){S=freshState('Hero','knight','standard');renderAll();S=null;openStart();return;}upgrade(S);ensureBounties();renderAll();checkPiTime();}
+function start(data){renderLegend();loadCustomSounds();S=(data&&data.S&&data.S.hero)?data.S:load();
+ if(!S){S=freshState('Hero','knight','standard');renderAll();S=null;openStart();return;}upgrade(S);if(S.pendingPos!=null){if(S.pendingPos<S.pos)S.pos=S.pendingPos;delete S.pendingPos;save();}ensureBounties();renderAll();checkPiTime();}
 try{window.claude?.hot?.snapshot?.(()=>({S}));}catch(e){}
 if(window.claude?.hot?.ready)window.claude.hot.ready(start);else start(window.claude?.hot?.data??{});
 </script>
