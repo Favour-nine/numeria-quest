@@ -15,6 +15,8 @@ Students create a hero, roll the die to move along a board-game map, and battle 
 - **Action:** timed Blitz rounds, combo streaks and animated battles.
 - **Role-playing progression:** choose a class (Knight, Mage or Ranger) and a character look, then earn XP, level up, collect gold and buy items.
 - **Replay value:** the Challenge Hall has star-rated modes (Time Attack, Survival, Perfect Ten, Elite Rematch), plus bounties, achievements and hidden secrets.
+- **Practice room:** students pick any topic or one of 81 subtopics, choose word problems, quick questions or a mix, set how many questions and what level, and practise with free hints and no monsters. The results screen shows a breakdown by subtopic and a "Retry my mistakes" option.
+- **Word problems:** real-life, multi-step questions about wages, phone contracts, sales, recipes, travel, gardens, ladders, raffles and more. They also appear in quests and treasure chests.
 
 ## Topics covered
 
