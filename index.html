@@ -1,0 +1,1272 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Numeria Quest: a GCSE Foundation maths adventure game.">
+<meta name="theme-color" content="#17263a">
+<title>Numeria Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@500;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap">
+<style>
+/* Layout: a board-game map drawn on maths graph paper, beside a hero character sheet; every encounter opens as a sticker-style card */
+:root{
+  --paper:#e9f0ed; --grid:#cfdfd8; --ink:#17263a; --ink-2:#4f6276; --card:#ffffff; --muted:#e2eae7;
+  --gold:#f3b229; --coral:#e2533c; --teal:#14806f; --sky:#3a8fd6;
+  --good-bg:#e1f4ec; --bad-bg:#fde8e3; --veil:rgba(23,38,58,.6);
+  --f-display:'Bungee','Impact','Arial Black',system-ui,sans-serif;
+  --f-body:'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-num:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:22px 22px;color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+h2,h3,h4{margin:0;text-wrap:balance}
+
+.app{max-width:1260px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 48px;display:flex;flex-direction:column;gap:16px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{font-family:var(--f-display);font-size:clamp(26px,4.2vw,38px);line-height:1;color:var(--ink);text-shadow:3px 3px 0 var(--gold)}
+.sub{font-family:var(--f-display);font-size:13px;background:var(--ink);color:var(--gold);padding:3px 9px;border-radius:6px;transform:rotate(-4deg)}
+.hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stat{background:var(--card);border:2px solid var(--ink);border-radius:10px;padding:4px 10px;display:flex;align-items:center;gap:8px;font-weight:800;box-shadow:2px 2px 0 var(--ink);font-size:14px}
+.stat .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.lvl{font-family:var(--f-display);background:var(--gold)}
+.bar{height:12px;border-radius:7px;background:var(--muted);border:2px solid var(--ink);overflow:hidden;width:96px}
+.bar i{display:block;height:100%;width:0;background:var(--teal);transition:width .4s ease}
+.bar.xp i{background:var(--sky)}
+.bar.ehp i{background:var(--coral)}
+
+.layout{width:100%;max-width:1000px;margin:0 auto}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+.top-actions .btn{display:inline-flex;align-items:center;gap:8px;position:relative}
+.dot{position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:var(--coral);border:2px solid var(--ink)}
+.drawer-veil{position:fixed;inset:0;background:var(--veil);z-index:55}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--paper);border-left:2px solid var(--ink);z-index:60;display:flex;flex-direction:column;gap:12px;overflow-y:auto;padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));padding-left:16px;padding-right:max(16px,env(safe-area-inset-right,0px));animation:slide .22s ease-out}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.drawer-head h2{font-family:var(--f-display);font-weight:400;font-size:20px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{border:2px solid var(--ink);border-radius:999px;padding:4px 12px;background:var(--card);font-weight:800;font-size:13px;cursor:pointer;color:var(--ink)}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.drawer .panel{box-shadow:3px 3px 0 var(--ink)}
+.hall-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.hall h4{font-family:var(--f-display);font-weight:400;font-size:14px;letter-spacing:.04em}
+.hall-region{border:2px solid var(--ink);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--card)}
+.hall-region.off{border-style:dashed;border-color:var(--ink-2);background:var(--paper)}
+.hall-name{display:flex;align-items:center;gap:8px;font-weight:900;font-size:15px}
+.hall-name .small{margin-left:auto}
+.swatch{width:16px;height:16px;border-radius:5px;border:2px solid var(--ink);background:var(--rc);flex:none}
+.modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:8px}
+.mode{border:2px solid var(--ink);border-radius:10px;background:var(--card);padding:7px 9px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:1px;font-size:12px;color:var(--ink-2);font-weight:700;box-shadow:2px 2px 0 var(--ink)}
+.mode b{color:var(--ink);font-size:14px}
+.mode:hover{background:#fff6dd}
+.stars{color:var(--gold);letter-spacing:1px;font-size:15px;line-height:1.2;-webkit-text-stroke:.7px var(--ink)}
+.stars.big{font-size:30px;letter-spacing:4px}
+.bounty{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;border:2px solid var(--muted);border-radius:12px;padding:8px 10px;background:var(--card)}
+.bounty.done{border-color:var(--teal);background:var(--good-bg)}
+.bounty .bar{width:100%}
+.bounty-text{font-weight:800;font-size:14px}
+.stat.cheat{background:var(--coral);color:#fff}
+.rainbow path{animation:hue 1.4s linear infinite}
+.secrets{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.secrets li{display:flex;gap:8px;align-items:baseline;font-size:13px;border:2px solid var(--muted);border-radius:10px;padding:6px 10px}
+.secrets li b{font-size:13px;flex:none}
+.secrets li.found{border-color:var(--ink);background:#fff6dd}
+.secrets li span{color:var(--ink-2);font-weight:600}
+.cheat-row{display:flex;flex-wrap:wrap;gap:6px}
+.lives{color:var(--coral);font-size:20px;letter-spacing:3px}
+.goal-list{display:flex;flex-wrap:wrap;gap:6px;font-size:13px;font-weight:700;color:var(--ink-2)}
+.goal-list span{border:2px solid var(--muted);border-radius:999px;padding:2px 10px}
+.board-card,.panel{background:var(--card);border:2px solid var(--ink);border-radius:16px;box-shadow:4px 4px 0 var(--ink)}
+.board-card{padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.board-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 14px}
+.board-head h2{font-family:var(--f-display);font-size:20px;font-weight:400}
+.board-head p{margin:0;color:var(--ink-2);font-weight:700}
+.map-wrap{border-radius:12px;background:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:16px 16px;border:2px solid var(--ink)}
+.map-wrap svg{display:block;width:100%;height:auto}
+.band-label{font-family:var(--f-display);font-size:13px;letter-spacing:.05em;paint-order:stroke;stroke:#fbf8f1;stroke-width:4px;stroke-linejoin:round}
+.band-topic{font-family:var(--f-body);font-weight:800;font-size:12px;paint-order:stroke;stroke:#fbf8f1;stroke-width:3.5px;stroke-linejoin:round}
+.locked{opacity:.55}
+.tile-done{opacity:.4}
+#token{transition:transform .22s ease}
+.token-initial{font-family:var(--f-display);font-size:14px}
+.castle-label{font-family:var(--f-display);font-size:13px;fill:#f4f1ea;paint-order:stroke;stroke:#1f1a26;stroke-width:4px;stroke-linejoin:round}
+
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.dice{display:flex;gap:10px}
+.die{width:54px;height:54px;border:2px solid var(--ink);border-radius:12px;background:var(--card);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:7px;box-shadow:3px 3px 0 var(--ink);flex:none}
+.die span{width:10px;height:10px;border-radius:50%;place-self:center}
+.die span.on{background:var(--ink)}
+.die.rolling{animation:wob .12s linear infinite}
+button.die{cursor:pointer}
+button.die:hover{background:var(--gold)}
+.choose{display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:800;font-size:13px}
+.luck-banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;background:#fff6dd;border:2px dashed var(--gold);border-radius:12px;padding:8px 12px;font-size:14px;font-weight:700}
+.luck-banner b{font-family:var(--f-display);font-weight:400;color:var(--ink)}
+.toggle[aria-pressed="true"]{background:var(--teal);color:#fff}
+.roll-msg{margin:0;font-weight:800;font-size:14px;flex:1 1 220px;min-width:0}
+.ctrl-note{margin:0;color:var(--ink-2);font-size:13px;font-weight:700;flex:1 1 220px;min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;font-weight:700;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:22px;height:22px;flex:none}
+
+.btn{font-weight:800;font-size:15px;border:2px solid var(--ink);border-radius:10px;background:var(--card);color:var(--ink);padding:9px 16px;cursor:pointer;box-shadow:3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s,background .15s}
+.btn:hover{background:var(--muted)}
+.btn.primary{background:var(--gold)}
+.btn.primary:hover{background:#f7c450}
+.btn.danger{background:var(--coral);color:#fff}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:3px 3px 0 var(--ink)}
+.btn.sm{font-size:13px;padding:5px 10px;box-shadow:2px 2px 0 var(--ink)}
+.link-btn{background:none;border:0;padding:0;color:var(--sky);font-weight:800;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+.panel{padding:14px;display:flex;flex-direction:column;gap:10px}
+.panel h3{font-family:var(--f-display);font-weight:400;font-size:14px;letter-spacing:.04em}
+.hero-row{display:flex;gap:12px;align-items:center}
+.avatar{width:58px;height:58px;border-radius:50%;background:var(--c,var(--sky));border:3px solid var(--ink);display:grid;place-items:center;font-family:var(--f-display);font-size:22px;color:#fff;flex:none;text-shadow:2px 2px 0 var(--ink)}
+.avatar.big{width:84px;height:84px;font-size:30px}
+.avatar{overflow:hidden}
+.avatar svg{display:block;width:100%;height:100%}
+.picker{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:520px){.picker{grid-template-columns:1fr}.pick-preview{justify-self:center}}
+.pick-preview .avatar.big{width:96px;height:96px}
+.pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.pick{border:2px solid var(--muted);border-radius:12px;background:var(--card);padding:5px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:800;color:var(--ink-2);cursor:pointer}
+.pick .avatar{width:42px;height:42px;border-width:2px}
+.pick[aria-pressed="true"]{border-color:var(--ink);background:#fff6dd;box-shadow:2px 2px 0 var(--ink);color:var(--ink)}
+.sw-label{font-size:12px;font-weight:800;color:var(--ink-2);margin-top:10px;letter-spacing:.06em;text-transform:uppercase}
+.swatches{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.sw{width:28px;height:28px;border-radius:50%;background:var(--c);border:2px solid var(--ink);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--ink)}
+.hero-name{font-weight:900;font-size:18px;line-height:1.2;overflow-wrap:anywhere}
+.hero-cls{color:var(--ink-2);font-weight:700;font-size:13px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:14px}
+.kv dt{color:var(--ink-2);font-weight:700}
+.kv dd{margin:0;font-weight:800;text-align:right}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select{font:700 14px var(--f-body);border:2px solid var(--ink);border-radius:8px;padding:4px 8px;background:var(--card);color:var(--ink)}
+.bag{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.item{border:2px solid var(--ink);border-radius:12px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;font-size:12px;font-weight:700;color:var(--ink-2)}
+.item svg{width:30px;height:30px}
+.item b{color:var(--ink);font-size:15px}
+.skill{display:grid;grid-template-columns:1fr 64px 46px;gap:8px;align-items:center;font-size:13px;font-weight:700}
+.skill .bar{width:100%;height:10px}
+.skill .bar i{background:var(--teal)}
+.skill .pct{text-align:right}
+.tip{background:var(--paper);border:2px dashed var(--ink-2);border-radius:10px;padding:8px 10px;font-size:13px;font-weight:700}
+.ach{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.badge{border:2px solid var(--muted);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--ink-2)}
+.badge b{font-size:13px;color:var(--ink-2)}
+.badge.on{border-color:var(--ink);background:#fff6dd}
+.badge.on b{color:var(--ink)}
+.log{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+.log li{border-left:3px solid var(--gold);padding-left:8px;overflow-wrap:anywhere}
+details summary{cursor:pointer;font-family:var(--f-display);font-size:14px;letter-spacing:.04em}
+details p,details ul{margin:8px 0 0;font-size:14px}
+details ul{padding-left:18px}
+
+.modal{position:fixed;inset:0;background:var(--veil);display:flex;z-index:50;overflow-y:auto;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.dialog{margin:auto;background:var(--card);border:2px solid var(--ink);border-radius:18px;box-shadow:6px 6px 0 var(--ink);width:100%;max-width:600px;padding:20px;display:flex;flex-direction:column;gap:14px;animation:pop .22s ease-out}
+.dlg-head{display:flex;flex-direction:column;gap:2px;padding-right:40px}
+.dialog-wrap{margin:auto;position:relative;width:100%;max-width:600px}
+.x-btn{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:900 22px/1 var(--f-body);cursor:pointer;display:grid;place-items:center;padding:0 0 2px;z-index:3;box-shadow:2px 2px 0 var(--ink)}
+.x-btn:hover{background:var(--muted)}
+.dialog>.luck-banner:first-child{margin-right:40px}
+.luck-banner.flee{border-color:var(--coral);background:var(--bad-bg)}
+.eyebrow{font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--coral)}
+.dlg-head h3{font-family:var(--f-display);font-weight:400;font-size:clamp(20px,4vw,26px);line-height:1.15}
+.dlg-head.calm .eyebrow{color:var(--teal)}
+.story{margin:0;font-size:16px;font-weight:600}
+.arena{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;background:var(--paper);border:2px solid var(--ink);border-radius:14px;padding:12px}
+.fighter{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0}
+.fighter .bar{width:100%;max-width:150px}
+.f-name{font-weight:900;font-size:14px;line-height:1.2;overflow-wrap:anywhere}
+.f-num{font-size:12px;color:var(--ink-2)}
+.vs{font-family:var(--f-display);font-size:20px;color:var(--coral)}
+.mon{width:96px;height:96px}
+.shake{animation:shake .4s}
+.fighter{position:relative}
+.arena{position:relative}
+.proj{position:absolute;left:0;top:0;pointer-events:none;z-index:3;will-change:transform}
+.fireball{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 40% 38%,#fffbe0 0 16%,#ffd34d 34%,#f3842a 64%,#d9381e 100%);box-shadow:0 0 14px 6px rgba(243,132,42,.65)}
+.fireball.big{width:48px;height:48px;box-shadow:0 0 22px 10px rgba(217,56,30,.6)}
+.orb{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--oc);border:2.5px solid var(--ink);color:#fff;font-family:var(--f-display);font-size:18px;line-height:1;text-shadow:1px 1px 0 var(--ink);box-shadow:0 0 12px 4px var(--oc)}
+.trail,.spark{position:absolute;border-radius:50%;pointer-events:none;z-index:2}
+.trail{width:11px;height:11px;transform:translate(-50%,-50%);animation:trail .45s ease-out forwards}
+.spark{width:7px;height:7px}
+.burst{position:absolute;width:20px;height:20px;border-radius:50%;border:4px solid var(--bc);pointer-events:none;z-index:4;animation:burst .45s ease-out forwards}
+@keyframes trail{to{opacity:0;transform:translate(-50%,-50%) scale(.15)}}
+@keyframes burst{from{transform:translate(-50%,-50%) scale(.3);opacity:1}to{transform:translate(-50%,-50%) scale(3.4);opacity:0}}
+.lunge-r{animation:lungeR .38s ease-out}
+.lunge-l{animation:lungeL .38s ease-out}
+.hit{animation:hit .5s ease-out}
+.block{animation:block .5s ease-out}
+.dmg{position:absolute;top:4px;left:50%;font-family:var(--f-display);font-size:24px;color:var(--coral);text-shadow:-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink),3px 3px 0 var(--ink);pointer-events:none;white-space:nowrap;animation:floatUp .95s ease-out forwards}
+.dmg.blocked{color:var(--sky);font-size:17px}
+@keyframes lungeR{40%{transform:translateX(34px) scale(1.08)}}
+@keyframes lungeL{40%{transform:translateX(-34px) scale(1.08)}}
+@keyframes hit{0%,100%{transform:none;filter:none}12%{transform:translateX(-9px) rotate(-6deg);filter:sepia(1) saturate(6) hue-rotate(-35deg) brightness(1.1)}28%{transform:translateX(8px) rotate(4deg);filter:sepia(1) saturate(6) hue-rotate(-35deg)}45%{transform:translateX(-5px) rotate(-2deg);filter:none}62%{transform:translateX(3px)}}
+@keyframes block{30%{transform:scale(.93);filter:drop-shadow(0 0 10px #3a8fd6) brightness(1.15)}}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}20%{opacity:1;transform:translate(-50%,-6px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-44px) scale(1)}}
+.battle-items{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;font-weight:700;color:var(--ink-2)}
+
+.qbox{display:flex;flex-direction:column;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;background:var(--ink);color:var(--card);padding:2px 8px;border-radius:999px}
+.chip.soft{background:var(--muted);color:var(--ink)}
+.q-text{margin:0;font-size:20px;font-weight:800;line-height:1.4}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-size:.82em;line-height:1.1;margin:0 3px;font-family:var(--f-num)}
+.frac span:first-child{border-bottom:2px solid currentColor;padding:0 3px}
+.ans-row{display:flex;gap:8px}
+.ans{font:700 20px var(--f-num);border:2px solid var(--ink);border-radius:10px;padding:8px 12px;flex:1;min-width:0;color:var(--ink);background:var(--card)}
+.ans:disabled{background:var(--muted)}
+.q-fig{display:flex;justify-content:center;overflow-x:auto;padding:2px}
+.qsvg{width:100%;height:auto;background:#fff;border:2px solid var(--ink);border-radius:12px;display:block}
+.qsvg text{font-family:var(--f-body);font-weight:700;font-size:13px;fill:#17263a}
+.qsvg .sm{font-size:11px;font-weight:700;fill:#4f6276}
+.qsvg .lbl{font-weight:900;font-size:14px}
+.qsvg .big{font-size:17px;font-weight:900}
+.qsvg .it{font-style:italic;font-weight:900}
+.qsvg .pie{font-size:12px;font-weight:900;fill:#fff;paint-order:stroke;stroke:#17263a;stroke-width:3px}
+.qtable{border-collapse:collapse;background:#fff;font-size:15px;font-variant-numeric:tabular-nums;font-family:var(--f-body)}
+.qtable th,.qtable td{border:2px solid var(--ink);padding:6px 11px;text-align:center;white-space:nowrap}
+.qtable th{background:var(--muted);font-weight:800;text-align:left}
+.qtable thead th{text-align:center}
+.colvec{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;border-left:2px solid currentColor;border-right:2px solid currentColor;border-radius:7px;padding:0 6px;line-height:1.15;font-family:var(--f-num);font-size:.82em;margin:0 3px}
+.hint{background:#fff6dd;border:2px solid var(--gold);border-radius:10px;padding:8px 10px;font-weight:700}
+.fb{border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.fb:empty{display:none}
+.fb.good{background:var(--good-bg);border:2px solid var(--teal)}
+.fb.bad{background:var(--bad-bg);border:2px solid var(--coral)}
+.fb p{margin:0}
+.fb-head{font-weight:900}
+.fb-note{font-weight:800;color:var(--ink-2)}
+.steps{display:flex;gap:8px}
+.steps span{width:28px;height:8px;border-radius:4px;background:var(--muted);border:2px solid var(--ink)}
+.steps span.ok{background:var(--teal)}
+.steps span.no{background:var(--coral)}
+.rewards{display:flex;flex-wrap:wrap;gap:8px}
+.reward{border:2px solid var(--ink);border-radius:10px;padding:6px 12px;font-weight:900;background:#fff6dd}
+.blitz-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.timer{flex:1 1 160px;height:16px;border:2px solid var(--ink);border-radius:9px;overflow:hidden;background:var(--muted)}
+.timer i{display:block;height:100%;background:var(--gold);width:100%}
+.flash{min-height:24px;font-weight:900}
+.flash.good{color:var(--teal)}
+.flash.bad{color:var(--coral)}
+.misses{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.shop{display:flex;flex-direction:column;gap:8px}
+.shop-row{display:flex;align-items:center;gap:10px;border:2px solid var(--muted);border-radius:12px;padding:8px 10px}
+.shop-row svg{width:30px;height:30px;flex:none}
+.shop-row div{flex:1;min-width:0;font-size:13px;color:var(--ink-2);font-weight:600}
+.shop-row b{display:block;color:var(--ink);font-size:14px}
+.classes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:520px){.classes{grid-template-columns:1fr}}
+.cls{border:2px solid var(--ink);border-radius:12px;padding:10px;background:var(--card);text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--ink-2);font-weight:600}
+.cls b{font-family:var(--f-display);font-weight:400;font-size:15px;color:var(--ink)}
+.cls[aria-pressed="true"]{background:#fff6dd;box-shadow:3px 3px 0 var(--ink)}
+.field{display:flex;flex-direction:column;gap:6px;font-weight:800}
+.field input{font:700 17px var(--f-body);border:2px solid var(--ink);border-radius:10px;padding:8px 12px;color:var(--ink);background:var(--card)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:2px solid var(--ink);border-radius:999px;padding:5px 12px;background:var(--card);font-weight:800;cursor:pointer;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.name-err{margin:0;color:var(--coral);font-weight:800;font-size:14px}
+.field input.bad{border-color:var(--coral);animation:shake .4s}
+.err-box{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));z-index:100;background:var(--bad-bg);border:2px solid var(--coral);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:700;box-shadow:3px 3px 0 var(--ink)}
+.small{font-size:13px;color:var(--ink-2);font-weight:600;margin:0}
+
+.toasts{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:80;max-width:min(320px,calc(100vw - 32px));pointer-events:none}
+.toast{background:var(--ink);color:var(--card);border-radius:12px;padding:10px 14px;box-shadow:3px 3px 0 var(--gold);font-size:14px;animation:pop .25s ease-out}
+.toast b{display:block;font-family:var(--f-display);font-weight:400;color:var(--gold);font-size:13px;letter-spacing:.04em}
+
+@keyframes wob{0%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}100%{transform:rotate(-8deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes hue{to{filter:hue-rotate(360deg)}}
+@keyframes slide{from{transform:translateX(40px);opacity:.3}to{transform:none;opacity:1}}
+@keyframes pop{from{transform:scale(.94);opacity:.4}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+<style>
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;min-height:100vh}
+img,svg{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="logo">Numeria</span><span class="sub">Quest</span></div>
+    <div class="hud" id="hud"></div>
+    <div class="top-actions">
+      <button class="btn primary" id="hallBtn" type="button">Challenges <span class="num" id="starCount">0★</span><span class="dot" id="hallDot" hidden></span></button>
+      <button class="btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="drawer">Menu</button>
+    </div>
+  </header>
+  <main class="layout">
+    <section class="board-card" aria-label="Adventure board">
+      <div class="board-head"><h2 id="regionTitle">Number Meadows</h2><p id="regionSub"></p></div>
+      <div class="map-wrap"><svg id="map" viewBox="0 0 760 752" role="img" aria-label="Adventure map of Numeria"></svg></div>
+      <div class="controls" id="controls"></div>
+      <div class="legend" id="legend"></div>
+    </section>
+  </main>
+</div>
+<div class="drawer-veil" id="veil" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="Menu">
+      <div class="drawer-head"><h2>Menu</h2><button class="btn sm" id="drawerClose" type="button">Close</button></div>
+      <div class="tabs" role="group" aria-label="Menu sections">
+        <button type="button" data-tab="heroPanel">Hero</button><button type="button" data-tab="bagPanel">Bag</button><button type="button" data-tab="skillPanel">Skill book</button><button type="button" data-tab="achPanel">Achievements</button><button type="button" data-tab="logPanel">Log</button><button type="button" data-tab="codesPanel">Codes</button><button type="button" data-tab="helpPanel">How to play</button>
+      </div>
+      <section class="panel" id="heroPanel"></section>
+      <section class="panel" id="bagPanel"></section>
+      <section class="panel" id="skillPanel"></section>
+      <section class="panel" id="achPanel"></section>
+      <section class="panel" id="logPanel"></section>
+      <section class="panel" id="codesPanel"></section>
+      <section class="panel" id="helpPanel">
+          <h3>How to play</h3>
+          <ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">
+            <li>Roll the die and your hero moves that many spaces. Only the space you stop on counts.</li><li>With Lucky skips on, rolling a 5 or 6 lets you skip a battle, trap, quest or blitz. Guardians can never be skipped.</li>
+            <li>Every encounter is won by solving maths. Wrong answers show the full working so you learn from them.</li>
+            <li>Get answers right in a row to build a combo. Combos make your attacks stronger.</li>
+            <li>Each region ends with a Guardian. Defeat it to open the next region.</li>
+            <li>Type fractions like <span class="num">3/4</span>. Units and £ signs are optional.</li>
+            <li>Beat a Guardian to unlock that region in the Challenge Hall. Each challenge earns up to 3 stars, so there is always a better score to chase.</li>
+            <li>Bounties in the Challenge Hall refresh as you complete them.</li>
+            <li>From any camp you can fast travel back to earlier regions. Chests in cleared regions refill each time you return.</li>
+            <li>Progress saves in this browser automatically.</li>
+          </ul>
+      </section>
+</aside>
+<div class="modal" id="modal" hidden><div class="dialog-wrap"><button class="x-btn" id="dlgX" type="button" aria-label="Close">×</button><div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-label="Encounter"></div></div></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+'use strict';
+function showErr(err){try{const msg=(err&&(err.message||err.reason&&err.reason.message||err.reason))||String(err);let b=document.getElementById('errBox');if(!b){b=document.createElement('div');b.id='errBox';b.className='err-box';b.setAttribute('role','alert');document.body.appendChild(b);}
+ b.innerHTML='<b>Something went wrong.</b> Please tell your teacher this message: <code></code> <button type="button" class="btn sm" style="margin-left:6px">Dismiss</button>';b.querySelector('code').textContent=msg;b.querySelector('button').onclick=()=>b.remove();}catch(e){}}
+window.addEventListener('error',e=>showErr(e.error||e.message));window.addEventListener('unhandledrejection',e=>showErr(e.reason));
+const $=id=>document.getElementById(id);
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const P=a=>a[Math.floor(Math.random()*a.length)];
+const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a);
+const m=n=>n<0?'−'+Math.abs(n):String(n);
+const pm=n=>n<0?'('+m(n)+')':String(n);
+const money=n=>Number.isInteger(n)?String(n):n.toFixed(2);
+const fr=(n,d)=>`<span class="frac"><span>${n}</span><span>${d}</span></span>`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const hash=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h;};
+
+/* ---------------- World data ---------------- */
+const TOPICS=['number','fraction','algebra','ratio','geometry','stats'];
+const TOPIC_NAMES={number:'Number',fraction:'Fractions & percentages',algebra:'Algebra',ratio:'Ratio & proportion',geometry:'Geometry & measures',stats:'Statistics & probability'};
+const REGIONS=[
+ {name:'Number Meadows',topic:'number',color:'#6fb43f',enemies:['Negative Newt','Rounding Rat','Square-Root Slug','Prime Imp'],boss:'The BIDMAS Bandit',quest:'The miller’s scales broke on market morning. Check her sums so nobody is cheated.'},
+ {name:'Fraction Forest',topic:'fraction',color:'#2f9d6a',enemies:['Halfling Hob','Percent Pixie','Decimal Dryad','Numerator Gnat'],boss:'The Denominator',quest:'The forest elves are dividing their autumn harvest. Work out each share.'},
+ {name:'Algebra Caves',topic:'algebra',color:'#7d68d0',enemies:['Variable Bat','Unknown Ooze','Bracket Crab','Term Troll'],boss:'X the Unsolved',quest:'Glowing runes on the cave wall hide unknown numbers. Decode them to open the door.'},
+ {name:'Ratio River',topic:'ratio',color:'#3a8fd6',enemies:['Ratio Pike','Proportion Eel','Recipe Raider','Speedy Otter'],boss:'The Lord of Proportion',quest:'The ferryman is loading supplies for three villages. Help him get every amount right.'},
+ {name:'Geometry Peaks',topic:'geometry',color:'#c0874d',enemies:['Angle Goat','Perimeter Yeti','Hypotenuse Hawk','Area Golem'],boss:'The Right-Angle Titan',quest:'Mountain builders need exact measurements for a new rope bridge.'},
+ {name:'Statistics Citadel',topic:'stats',color:'#cf5b86',enemies:['Median Mimic','Mode Moth','Mean Machine','Chance Wraith'],boss:'The Probability Phantom',quest:'The Citadel archivist has lost the averages from her records. Rebuild them.'}
+];
+const FINAL={name:'Castle of Infinity',color:'#2b3d57',boss:'The Infinity Dragon'};
+const PATTERNS=['CBTRBX','CTBQBX','CBXTRB','CQBTRB','CBTXQB','CRBTQX'];
+const TILE_INFO={C:['Camp','Rest and shop'],B:['Battle','Defeat a monster'],T:['Treasure','Unlock a chest'],X:['Blitz','Beat the clock'],R:['Trap','Answer or get hurt'],Q:['Quest','Three-part mission'],G:['Guardian','Opens the next region']};
+const CLASSES={
+ knight:{name:'Knight',hp:32,dmg:2,color:'#3a8fd6',blurb:'Toughest hero. Starts with a shield.',start:{potion:1,scroll:0,shield:1}},
+ mage:{name:'Mage',hp:24,dmg:3,color:'#7d68d0',blurb:'Hits hardest. Starts with two hint scrolls.',start:{potion:1,scroll:2,shield:0}},
+ ranger:{name:'Ranger',hp:28,dmg:2,color:'#14806f',blurb:'Quick thinker. +15 seconds in every Blitz.',start:{potion:2,scroll:1,shield:0}}
+};
+const SHOP={potion:{name:'Healing potion',price:15,desc:'Restores 12 HP. Use any time.'},scroll:{name:'Hint scroll',price:12,desc:'Reveals a hint on one question.'},shield:{name:'Shield charm',price:20,desc:'Blocks the next hit you take.'}};
+const ACH={
+ first:['First Victory','Win your first battle'],
+ streak5:['On Fire','5 correct in a row'],
+ streak10:['Unstoppable','10 correct in a row'],
+ flawless:['Untouchable','Win a battle without taking damage'],
+ chest3:['Treasure Hunter','Open 3 chests'],
+ blitz8:['Lightning Brain','Score 8 in one Blitz'],
+ quest:['Questkeeper','Finish a quest with no mistakes'],
+ gate:['Gatebreaker','Defeat your first Guardian'],
+ lv5:['Seasoned Hero','Reach level 5'],
+ sharp:['Sharpshooter','50 answers at 80% accuracy'],
+ champ:['Champion of Numeria','Defeat the Infinity Dragon'],
+ stars10:['Star Collector','Earn 10 challenge stars'],
+ stars45:['Hall of Fame','Earn 45 challenge stars'],
+ bounty5:['Bounty Hunter','Complete 5 bounties']
+};
+const PRAISE=['Correct!','Spot on!','Brilliant!','Nailed it!','Exactly right!','Great work!'];
+
+/* ---------------- Question generators (Foundation GCSE) ---------------- */
+const GEN={
+number:[
+ lv=>{let a=R(-12,12)||7,b=R(-12,12)||-4;const op=P(['+','−','×']);const ans=op==='+'?a+b:op==='−'?a-b:a*b;let exp;
+  if(op==='×')exp=`${(a<0)!==(b<0)?'Different signs multiply to give a negative':'Same signs multiply to give a positive'}: ${pm(a)} × ${pm(b)} = ${m(ans)}.`;
+  else if(op==='−'&&b<0)exp=`Subtracting a negative is the same as adding: ${m(a)} + ${-b} = ${m(ans)}.`;
+  else if(op==='−')exp=`Start at ${m(a)} on a number line and move ${b} to the left to reach ${m(ans)}.`;
+  else exp=`Start at ${m(a)} on a number line and move ${Math.abs(b)} to the ${b<0?'left':'right'} to reach ${m(ans)}.`;
+  return {text:`Work out ${pm(a)} ${op} ${pm(b)}`,ans,show:m(ans),exp,hint:'Picture a number line. Two negatives multiplied make a positive.'};},
+ lv=>{if(lv===1){const a=R(2,20),b=R(2,9),c=R(2,9),ans=a+b*c;return {text:`Work out ${a} + ${b} × ${c}`,ans,show:''+ans,exp:`BIDMAS says multiply first: ${b} × ${c} = ${b*c}. Then ${a} + ${b*c} = ${ans}.`,hint:'Multiplication comes before addition.'};}
+  if(lv===2){const a=R(2,9),b=R(2,9),c=R(2,6),d=R(1,10),ans=(a+b)*c-d;return {text:`Work out (${a} + ${b}) × ${c} − ${d}`,ans,show:m(ans),exp:`Brackets first: ${a} + ${b} = ${a+b}. Multiply: ${a+b} × ${c} = ${(a+b)*c}. Subtract ${d}: ${m(ans)}.`,hint:'Brackets, then multiply, then subtract.'};}
+  const b=P([2,3,4,6,8,9,10]);const c=P([2,3,4,5,6,8,10].filter(x=>(b*b)%x===0));const a=R(1,20),ans=a+b*b/c;
+  return {text:`Work out ${a} + ${b}² ÷ ${c}`,ans,show:''+ans,exp:`Indices first: ${b}² = ${b*b}. Divide: ${b*b} ÷ ${c} = ${b*b/c}. Add: ${a} + ${b*b/c} = ${ans}.`,hint:'BIDMAS: indices, then divide, then add.'};},
+ lv=>{if(lv===1){const n=R(101,999),ans=Math.round(n/10)*10;return {text:`Round ${n} to the nearest 10`,ans,show:''+ans,exp:`Look at the units digit, ${n%10}. ${n%10>=5?'It is 5 or more, so round up':'It is less than 5, so round down'}: ${ans}.`,hint:'Look at the digit to the right of the tens.'};}
+  if(lv===2){const n=R(1001,29999),x=(n/1000).toFixed(3),ans=Math.round(n/100)/10,d=Math.floor(n/10)%10;return {text:`Round ${x} to 1 decimal place`,ans,show:ans.toFixed(1),exp:`The second decimal digit is ${d}. ${d>=5?'5 or more, so round up':'Less than 5, so round down'}: ${ans.toFixed(1)}.`,hint:'Look at the second digit after the decimal point.'};}
+  const n=R(1000,99999),p=10**(String(n).length-2),ans=Math.round(n/p)*p;return {text:`Round ${n.toLocaleString('en-GB')} to 2 significant figures`,ans,show:ans.toLocaleString('en-GB'),exp:`The first two significant figures are ${String(n).slice(0,2)}. The next digit is ${String(n)[2]}, so the answer is ${ans.toLocaleString('en-GB')}. Keep the place value with zeros.`,hint:'Count from the first non-zero digit. Fill the rest with zeros.'};},
+ lv=>{const t=lv===1?P(['sq','root']):P(['sq','cube','root']);
+  if(t==='sq'){const n=R(2,lv===1?12:15);return {text:`Work out ${n}²`,ans:n*n,show:''+n*n,exp:`${n}² means ${n} × ${n} = ${n*n}.`,hint:'Squared means multiply the number by itself.'};}
+  if(t==='cube'){const n=R(2,5);return {text:`Work out ${n}³`,ans:n**3,show:''+n**3,exp:`${n}³ means ${n} × ${n} × ${n} = ${n**3}.`,hint:'Cubed means three lots of the number multiplied together.'};}
+  const n=R(2,lv===1?10:15);return {text:`Work out √${n*n}`,ans:n,show:''+n,exp:`√${n*n} = ${n} because ${n} × ${n} = ${n*n}.`,hint:'Which number times itself gives this?'};},
+ lv=>{if(Math.random()<.5){const k=P([2,3,4,5,6]);let a=k*R(2,7),b=k*R(2,7);if(a===b)b+=k;const h=gcd(a,b);return {text:`Find the highest common factor (HCF) of ${a} and ${b}`,ans:h,show:''+h,exp:`The biggest number that divides exactly into both ${a} and ${b} is ${h}.`,hint:'List the factors of both numbers and find the biggest one they share.'};}
+  const a=R(2,9);let b=R(2,12);if(a===b)b++;const l=a*b/gcd(a,b);return {text:`Find the lowest common multiple (LCM) of ${a} and ${b}`,ans:l,show:''+l,exp:`Multiples of ${b}: ${b}, ${2*b}, ${3*b}, … The first one that ${a} also divides is ${l}.`,hint:'Write out the times tables of both numbers.'};}
+],
+fraction:[
+ lv=>{const d=P(lv===1?[2,4,5,10]:[3,4,5,8,10,12]),n=R(1,d-1),k=R(2,lv===3?20:12),A=d*k,ans=n*k;return {text:`Find ${fr(n,d)} of ${A}`,ans,show:''+ans,exp:`Divide by the denominator: ${A} ÷ ${d} = ${k}. Multiply by the numerator: ${k} × ${n} = ${ans}.`,hint:'Divide by the bottom, times by the top.'};},
+ lv=>{const p=P(lv===1?[10,25,50]:[5,15,20,30,35,75]),A=P([40,60,80,120,160,200,240,360]),ans=A*p/100;return {text:`Find ${p}% of £${A}`,ans,show:'£'+money(ans),exp:`1% of £${A} is £${money(A/100)}. So ${p}% is ${p} × £${money(A/100)} = £${money(ans)}.`,hint:'Find 10% (divide by 10) or 1% (divide by 100) and build up.'};},
+ lv=>{const up=Math.random()<.5,p=P(lv===1?[10,50]:[5,10,15,20,25,30]),A=P([20,40,60,80,120,200,300]),ch=A*p/100,ans=up?A+ch:A-ch;return {text:`${up?'Increase':'Decrease'} £${A} by ${p}%`,ans,show:'£'+money(ans),exp:`${p}% of £${A} = £${money(ch)}. Then £${A} ${up?'+':'−'} £${money(ch)} = £${money(ans)}.`,hint:`Find ${p}% first, then ${up?'add it on':'take it away'}.`};},
+ lv=>{if(Math.random()<.5){const n=R(1,99),x=(n/100).toFixed(2);return {text:`Write ${x} as a percentage`,ans:n,show:n+'%',exp:`Multiply by 100: ${x} × 100 = ${n}%.`,hint:'Per cent means out of 100.'};}
+  const [n,d]=P([[1,2],[1,4],[3,4],[1,5],[2,5],[3,5],[4,5],[1,10],[3,10],[7,10],[1,20],[3,20],[1,8],[3,8]]),ans=n/d;return {text:`Write ${fr(n,d)} as a decimal`,ans,show:''+ans,exp:`${n} ÷ ${d} = ${ans}.`,hint:'Divide the top by the bottom.'};},
+ lv=>{const [a,b]=P([[1,2],[1,3],[2,3],[1,4],[3,4],[2,5],[3,5],[1,6],[5,6],[3,7],[3,8],[5,8],[7,9],[3,10]]),k=R(2,lv===1?5:9);return {text:`Simplify ${fr(a*k,b*k)} fully. Type it like 3/4`,ans:a/b,exact:[a,b],show:`${a}/${b}`,exp:`Divide the top and bottom by ${k}: ${a*k} ÷ ${k} = ${a} and ${b*k} ÷ ${k} = ${b}.`,hint:'Find the biggest number that divides the top and the bottom.'};},
+ lv=>{const d=P([5,7,8,9,10,11,12]),a=R(1,d-2),b=R(1,d-1-a),s=a+b,g=gcd(s,d);return {text:`Work out ${fr(a,d)} + ${fr(b,d)}. Type it like 3/4`,ans:s/d,show:g>1?`${s/g}/${d/g}`:`${s}/${d}`,exp:`The denominators match, so add the numerators: ${a} + ${b} = ${s}. That gives ${s}/${d}${g>1?`, which simplifies to ${s/g}/${d/g}`:''}.`,hint:'When the bottoms match, add the tops only.'};}
+],
+algebra:[
+ lv=>{const a=R(2,lv===1?5:9),x=lv===3?R(-6,12):R(1,12),b=R(1,20)*(lv>1&&Math.random()<.4?-1:1),c=a*x+b;return {text:`Solve ${a}x ${b<0?'−':'+'} ${Math.abs(b)} = ${m(c)}`,ans:x,show:'x = '+m(x),exp:`${b<0?'Add':'Subtract'} ${Math.abs(b)} on both sides: ${a}x = ${m(c-b)}. Divide by ${a}: x = ${m(x)}.`,hint:'Undo the + or − first, then undo the ×.'};},
+ lv=>{const x=R(lv===3?-5:1,9)||2,y=R(1,9),p=R(2,6),q=R(2,6),minus=lv>1&&Math.random()<.5,ans=minus?p*x-q*y:p*x+q*y;return {text:`If x = ${m(x)} and y = ${y}, work out ${p}x ${minus?'−':'+'} ${q}y`,ans,show:m(ans),exp:`${p} × ${pm(x)} = ${m(p*x)} and ${q} × ${y} = ${q*y}. Then ${m(p*x)} ${minus?'−':'+'} ${q*y} = ${m(ans)}.`,hint:'Swap each letter for its number. Multiply before you add.'};},
+ lv=>{const a=R(2,lv===1?5:9),b=R(-5,9),k=P(lv===1?[5,10]:[10,20,50,100]),ans=a*k+b,tail=b===0?'':b<0?' − '+(-b):' + '+b;return {text:`A sequence has nth term ${a}n${tail}. Find term number ${k}.`,ans,show:''+ans,exp:`Put n = ${k}: ${a} × ${k}${tail} = ${ans}.`,hint:'Replace n with the term number.'};},
+ lv=>{const c1=R(2,9),c2=R(2,9),c3=R(1,c1+c2-2),v=P(['a','b','m','y','t']),ans=c1+c2-c3;return {text:`Simplify ${c1}${v} + ${c2}${v} − ${c3}${v}. Type it like 5${v}`,ans,show:(ans===1?'':ans)+v,exp:`Collect like terms: ${c1} + ${c2} − ${c3} = ${ans}, so the answer is ${ans===1?'':ans}${v}.`,hint:`Treat ${v} like a unit and just work with the numbers in front.`};},
+ lv=>{const a=R(2,6),b=R(1,8),x=R(1,9),c=a*(x+b);return {text:`Solve ${a}(x + ${b}) = ${c}`,ans:x,show:'x = '+x,exp:`Divide both sides by ${a}: x + ${b} = ${x+b}. Subtract ${b}: x = ${x}.`,hint:`Divide both sides by ${a} first.`};}
+],
+ratio:[
+ lv=>{const a=R(1,5),b=R(a+1,a+5),k=R(2,lv===1?10:25),tot=(a+b)*k;return {text:`Share £${tot} in the ratio ${a}:${b}. How much is the larger share?`,ans:b*k,show:'£'+b*k,exp:`${a} + ${b} = ${a+b} parts. One part = £${tot} ÷ ${a+b} = £${k}. Larger share = ${b} × £${k} = £${b*k}.`,hint:'Add the ratio numbers to find the total parts.'};},
+ lv=>{const s=P([2,4,5]),t=P([3,6,8,10,12].filter(x=>x!==s)),u=P([25,30,40,50,60,75]),amt=s*u,ans=t*u;return {text:`A recipe for ${s} people uses ${amt} g of flour. How much flour is needed for ${t} people?`,ans,show:ans+' g',exp:`For 1 person: ${amt} ÷ ${s} = ${u} g. For ${t} people: ${u} × ${t} = ${ans} g.`,hint:'Find the amount for one person first.'};},
+ lv=>{const v=P([30,40,50,60,70,80]),t=lv===1?R(2,4):P([0.5,1.5,2.5,3]),d=v*t;return {text:`A car travels ${d} km in ${t===0.5?'30 minutes':t+' hours'}. What is its average speed in km/h?`,ans:v,show:v+' km/h',exp:`Speed = distance ÷ time = ${d} ÷ ${t} = ${v} km/h.`,hint:'Speed = distance ÷ time. 30 minutes is 0.5 hours.'};},
+ lv=>{const n=R(3,6),u=P([20,25,35,40,45,60,75,80]),k=R(n+1,12),ans=k*u/100;return {text:`${n} pens cost £${(n*u/100).toFixed(2)}. How much do ${k} pens cost?`,ans,show:'£'+ans.toFixed(2),exp:`One pen costs £${(n*u/100).toFixed(2)} ÷ ${n} = ${u}p. So ${k} pens cost ${k} × ${u}p = ${k*u}p = £${ans.toFixed(2)}.`,hint:'Find the cost of one pen first.'};},
+ lv=>{const a=R(2,5),b=R(a+1,9),k=R(2,lv===1?6:12);return {text:`The ratio of boys to girls in a club is ${a}:${b}. There are ${a*k} boys. How many girls are there?`,ans:b*k,show:''+b*k,exp:`${a*k} ÷ ${a} = ${k}, so each part is worth ${k}. Girls = ${b} × ${k} = ${b*k}.`,hint:'Work out what one part of the ratio is worth.'};}
+],
+geometry:[
+ lv=>{const w=R(3,15),h=R(2,12);if(Math.random()<.5)return {text:`A rectangle is ${w} cm long and ${h} cm wide. Find its area.`,ans:w*h,show:w*h+' cm²',exp:`Area = length × width = ${w} × ${h} = ${w*h} cm².`,hint:'Area of a rectangle = length × width.'};
+  return {text:`A rectangle is ${w} cm long and ${h} cm wide. Find its perimeter.`,ans:2*(w+h),show:2*(w+h)+' cm',exp:`Perimeter = ${w} + ${h} + ${w} + ${h} = ${2*(w+h)} cm.`,hint:'Add up all four sides.'};},
+ lv=>{const b=R(2,10)*2,h=R(3,14),ans=b*h/2;return {text:`A triangle has base ${b} cm and perpendicular height ${h} cm. Find its area.`,ans,show:ans+' cm²',exp:`Area = ½ × base × height = ½ × ${b} × ${h} = ${ans} cm².`,hint:'Half of base × height.'};},
+ lv=>{const t=P(['tri','line','point']);
+  if(t==='tri'){const a=R(30,80),b=R(20,160-a),c=180-a-b;return {text:`Two angles in a triangle are ${a}° and ${b}°. Find the third angle.`,ans:c,show:c+'°',exp:`Angles in a triangle add up to 180°. 180 − ${a} − ${b} = ${c}°.`,hint:'Angles in a triangle add up to 180°.'};}
+  if(t==='line'){const a=R(15,165);return {text:`Two angles sit on a straight line. One is ${a}°. Find the other.`,ans:180-a,show:(180-a)+'°',exp:`Angles on a straight line add up to 180°. 180 − ${a} = ${180-a}°.`,hint:'Angles on a straight line add up to 180°.'};}
+  const a=R(60,150),b=R(40,330-a),c=360-a-b;return {text:`Three angles meet at a point: ${a}°, ${b}° and x. Find x.`,ans:c,show:c+'°',exp:`Angles around a point add up to 360°. 360 − ${a} − ${b} = ${c}°.`,hint:'Angles around a point add up to 360°.'};},
+ lv=>{const l=R(2,10),w=R(2,8),h=R(2,lv===1?5:10),v=l*w*h;return {text:`A cuboid measures ${l} cm by ${w} cm by ${h} cm. Find its volume.`,ans:v,show:v+' cm³',exp:`Volume = length × width × height = ${l} × ${w} × ${h} = ${v} cm³.`,hint:'Multiply the three measurements.'};},
+ lv=>{const r=R(2,lv===1?6:12),circ=Math.random()<.5,ex=circ?2*Math.PI*r:Math.PI*r*r,ans=Math.round(ex*10)/10;return {text:`A circle has radius ${r} cm. Find its ${circ?'circumference':'area'} to 1 decimal place.`,ans,tol:Math.max(.051,ex*.001),show:ans.toFixed(1)+(circ?' cm':' cm²'),exp:circ?`Circumference = 2 × π × r = 2 × π × ${r} = ${ex.toFixed(3)}… which rounds to ${ans.toFixed(1)} cm.`:`Area = π × r² = π × ${r*r} = ${ex.toFixed(3)}… which rounds to ${ans.toFixed(1)} cm².`,hint:circ?'Circumference = 2 × π × radius. Use the π button.':'Area = π × radius². Use the π button.'};},
+ lv=>{const [a,b,c]=P([[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15],[12,16,20],[7,24,25]]);return {text:`A right-angled triangle has shorter sides ${a} cm and ${b} cm. Find the hypotenuse.`,ans:c,show:c+' cm',exp:`Pythagoras: c² = ${a}² + ${b}² = ${a*a} + ${b*b} = ${c*c}. So c = √${c*c} = ${c} cm.`,hint:'a² + b² = c². Square, add, then square root.'};}
+],
+stats:[
+ lv=>{const n=lv===1?4:5;let arr,mean,last;do{mean=R(4,20);arr=Array.from({length:n-1},()=>R(Math.max(1,mean-8),mean+8));last=mean*n-arr.reduce((s,x)=>s+x,0);}while(last<1||last>mean+12);arr.push(last);shuffle(arr);const sum=mean*n;
+  return {text:`Find the mean of: ${arr.join(', ')}`,ans:mean,show:''+mean,exp:`Add them up: ${arr.join(' + ')} = ${sum}. Divide by how many there are: ${sum} ÷ ${n} = ${mean}.`,hint:'Add them all, then divide by how many numbers there are.'};},
+ lv=>{const n=lv===1?5:7,arr=Array.from({length:n},()=>R(1,30)),s=[...arr].sort((a,b)=>a-b),med=s[(n-1)/2];return {text:`Find the median of: ${arr.join(', ')}`,ans:med,show:''+med,exp:`Put them in order: ${s.join(', ')}. The middle value is ${med}.`,hint:'Order the numbers first, then find the middle one.'};},
+ lv=>{const arr=Array.from({length:6},()=>R(lv===3?-10:1,40)),mx=Math.max(...arr),mn=Math.min(...arr);return {text:`Find the range of: ${arr.map(m).join(', ')}`,ans:mx-mn,show:''+(mx-mn),exp:`Range = highest − lowest = ${m(mx)} − ${pm(mn)} = ${mx-mn}.`,hint:'Biggest take away smallest.'};},
+ lv=>{const mo=R(1,15),others=shuffle(Array.from({length:20},(_,i)=>i+1).filter(x=>x!==mo)).slice(0,lv===1?3:5),arr=shuffle([mo,mo,...others]);return {text:`Find the mode of: ${arr.join(', ')}`,ans:mo,show:''+mo,exp:`${mo} appears twice. Every other number appears once, so the mode is ${mo}.`,hint:'The mode is the most common value.'};},
+ lv=>{const c={red:R(1,6),blue:R(1,6),green:R(1,5)},t=c.red+c.blue+c.green,col=P(['red','blue','green']),n=c[col],g=gcd(n,t);return {text:`A bag has ${c.red} red, ${c.blue} blue and ${c.green} green counters. One is picked at random. What is the probability it is ${col}? Type it like 2/9`,ans:n/t,show:g>1?`${n/g}/${t/g}`:`${n}/${t}`,exp:`There are ${n} ${col} out of ${t} counters, so P(${col}) = ${n}/${t}${g>1?` = ${n/g}/${t/g}`:''}.`,hint:'Probability = number of ways it can happen ÷ total number of outcomes.'};},
+ lv=>{const p=P([0.1,0.2,0.25,0.3,0.4,0.5]),N=P([20,40,60,80,100,200]),ans=Math.round(p*N);return {text:`A spinner lands on blue with probability ${p}. It is spun ${N} times. How many times would you expect blue?`,ans,show:''+ans,exp:`Expected frequency = probability × number of trials = ${p} × ${N} = ${ans}.`,hint:'Multiply the probability by the number of spins.'};}
+]
+};
+/* ---------------- Revision guide question bank ----------------
+   Original questions written to match the topics in the class revision guide.
+   Diagrams are drawn fresh for every question, so the numbers always match. */
+const QI='#17263a',QA='#3a8fd6',QC='#e2533c',QG='#14806f',QY='#f3b229';
+const PIE_COLS=['#3a8fd6','#f3b229','#e2533c','#14806f','#7d68d0','#cf5b86'];
+const SV=(w,h,inner,alt)=>`<svg class="qsvg" viewBox="0 0 ${w} ${h}" style="max-width:${w}px" role="img" aria-label="${alt}">${inner}</svg>`;
+const tx=(x,y,t,a='')=>`<text x="${(+x).toFixed(1)}" y="${(+y).toFixed(1)}" ${a}>${t}</text>`;
+const ln=(x1,y1,x2,y2,a='')=>`<line x1="${(+x1).toFixed(1)}" y1="${(+y1).toFixed(1)}" x2="${(+x2).toFixed(1)}" y2="${(+y2).toFixed(1)}" stroke="${QI}" stroke-width="2" ${a}/>`;
+const NDA=(x,y)=>tx(x,y,'Not drawn accurately','class="sm"');
+const ord=n=>n+(n%100>=11&&n%100<=13?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'));
+const tm=(c,v)=>c===0?'':(c<0?` − ${c===-1&&v?'':-c}${v}`:` + ${c===1&&v?'':c}${v}`);
+const hhmm=t=>`${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+const colvec=(a,b)=>`<span class="colvec"><span>${m(a)}</span><span>${m(b)}</span></span>`;
+const table=(head,rows)=>`<table class="qtable"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+const rtable=(rows)=>`<table class="qtable"><tbody>${rows.map(r=>`<tr><th>${r[0]}</th>${r.slice(1).map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+const isPrime=n=>{if(n<2)return false;for(let i=2;i*i<=n;i++)if(n%i===0)return false;return true;};
+
+/* ---- diagram builders ---- */
+function vennSVG(a,both,b,out){return SV(300,190,`<rect x="6" y="6" width="288" height="178" rx="8" fill="#fff" stroke="${QI}" stroke-width="2"/>${tx(16,28,'ξ','class="lbl big"')}
+<circle cx="118" cy="100" r="64" fill="${QA}" fill-opacity=".14" stroke="${QA}" stroke-width="2.5"/><circle cx="182" cy="100" r="64" fill="${QC}" fill-opacity=".14" stroke="${QC}" stroke-width="2.5"/>
+${tx(66,40,'A','class="lbl big"')}${tx(228,40,'B','class="lbl big"')}${tx(88,106,a,'text-anchor="middle" class="big"')}${tx(150,106,both,'text-anchor="middle" class="big"')}${tx(212,106,b,'text-anchor="middle" class="big"')}${tx(278,174,out,'text-anchor="end" class="big"')}`,`Venn diagram. A only ${a}, both ${both}, B only ${b}, outside ${out}`);}
+function numLineSVG(lo,hi,lc,hc){const s=lo-2,e=hi+2,X=v=>24+(v-s)*292/(e-s);let g=ln(8,54,332,54)+`<path d="M8 54 l8 -5 v10 z M332 54 l-8 -5 v10 z" fill="${QI}"/>`;
+ for(let v=s;v<=e;v++)g+=ln(X(v),48,X(v),60)+tx(X(v),78,m(v),'text-anchor="middle" class="sm"');
+ g+=`<line x1="${X(lo)}" y1="32" x2="${X(hi)}" y2="32" stroke="${QA}" stroke-width="4"/><circle cx="${X(lo)}" cy="32" r="6.5" fill="${lc?QA:'#fff'}" stroke="${QA}" stroke-width="3"/><circle cx="${X(hi)}" cy="32" r="6.5" fill="${hc?QA:'#fff'}" stroke="${QA}" stroke-width="3"/>`;
+ return SV(340,90,g,`Number line. ${lc?'Filled':'Open'} circle at ${lo}, ${hc?'filled':'open'} circle at ${hi}`);}
+function gridSVG(pts,seg,alt){const X=x=>32+x*20,Y=y=>226-y*20;let g='';
+ for(let i=0;i<=10;i++){g+=`<line x1="${X(i)}" y1="${Y(0)}" x2="${X(i)}" y2="${Y(10)}" stroke="#d3e2dc"/><line x1="${X(0)}" y1="${Y(i)}" x2="${X(10)}" y2="${Y(i)}" stroke="#d3e2dc"/>`;if(i%2===0&&i)g+=tx(X(i),Y(0)+16,i,'text-anchor="middle" class="sm"')+tx(X(0)-6,Y(i)+4,i,'text-anchor="end" class="sm"');}
+ g+=ln(X(0),Y(0),X(10.5),Y(0))+ln(X(0),Y(0),X(0),Y(10.5))+tx(X(10.5)+4,Y(0)+4,'x','class="it"')+tx(X(0)-4,Y(10.5)-5,'y','class="it"')+tx(X(0)-6,Y(0)+16,'0','text-anchor="end" class="sm"');
+ if(seg)g+=`<line x1="${X(seg[0][0])}" y1="${Y(seg[0][1])}" x2="${X(seg[1][0])}" y2="${Y(seg[1][1])}" stroke="${QA}" stroke-width="3"/>`;
+ pts.forEach(p=>{g+=`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="5" fill="${QC}" stroke="${QI}" stroke-width="1.5"/>`;if(p.label)g+=tx(X(p.x)+(p.x>8?-8:8),Y(p.y)-9,p.label,`class="lbl" ${p.x>8?'text-anchor="end"':''}`);});
+ return SV(262,252,g,alt);}
+function dtSVG(pts,tMax,dMax,dStep){const ox=50,oy=196,W=266,H=166,X=t=>ox+t/tMax*W,Y=d=>oy-d/dMax*H;let g='';
+ for(let t=0;t<=tMax;t+=30)g+=`<line x1="${X(t)}" y1="${oy}" x2="${X(t)}" y2="${oy-H}" stroke="#d3e2dc"/>`+tx(X(t),oy+16,t,'text-anchor="middle" class="sm"');
+ for(let d=0;d<=dMax;d+=dStep)g+=`<line x1="${ox}" y1="${Y(d)}" x2="${ox+W}" y2="${Y(d)}" stroke="#d3e2dc"/>`+tx(ox-6,Y(d)+4,d,'text-anchor="end" class="sm"');
+ g+=ln(ox,oy,ox+W,oy)+ln(ox,oy,ox,oy-H)+tx(ox+W/2,oy+34,'Time (minutes)','text-anchor="middle" class="sm"')+`<text transform="translate(14 ${oy-H/2}) rotate(-90)" text-anchor="middle" class="sm">Distance from home (km)</text>`;
+ g+=`<polyline points="${pts.map(p=>X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1)).join(' ')}" fill="none" stroke="${QC}" stroke-width="3" stroke-linejoin="round"/>`;
+ return SV(330,240,g,'Distance-time graph of a journey');}
+function polySVG(n){const pts=Array.from({length:n},(_,i)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [90+68*Math.cos(a),88+68*Math.sin(a)];});
+ return SV(180,176,`<polygon points="${pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="${QA}" fill-opacity=".15" stroke="${QI}" stroke-width="2.5" stroke-linejoin="round"/>`,`Regular polygon with ${n} sides`);}
+function isoSVG(top,base){const tick=(x1,y1,x2,y2)=>{const mx=(x1+x2)/2,my=(y1+y2)/2,dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy),nx=-dy/l*7,ny=dx/l*7;return ln(mx-nx,my-ny,mx+nx,my+ny);};
+ return SV(240,196,`<polygon points="120,22 30,170 210,170" fill="${QY}" fill-opacity=".18" stroke="${QI}" stroke-width="2.5" stroke-linejoin="round"/>${tick(120,22,30,170)}${tick(120,22,210,170)}
+ ${tx(120,58,top,'text-anchor="middle" class="lbl"')}${tx(56,162,base,'class="lbl"')}${tx(184,162,'','class="lbl"')}${NDA(8,190)}`,'Isosceles triangle with two equal sides marked');}
+function parSVG(qU,vU,qL,vL){const yU=62,yL=142,xAt=y=>90+(196-y)*140/184;const off={TR:[16,-8,'start'],TL:[-14,-8,'end'],BL:[-12,22,'end'],BR:[14,22,'start']};
+ const lab=(q,y,v)=>{const x=xAt(y),o=off[q];return tx(x+o[0],y+o[1],v,`text-anchor="${o[2]}" class="lbl big"`);};
+ const chev=y=>`<path d="M262 ${y-6} l8 6 l-8 6" fill="none" stroke="${QI}" stroke-width="2"/>`;
+ return SV(300,206,ln(20,yU,286,yU)+ln(20,yL,286,yL)+chev(yU)+chev(yL)+`<line x1="90" y1="196" x2="230" y2="12" stroke="${QA}" stroke-width="2.5"/>`+lab(qU,yU,vU)+lab(qL,yL,vL)+NDA(8,200),'Two parallel lines crossed by a transversal');}
+function lSVG(W,H,w2,h2){const k=Math.min(190/W,140/H),ox=50,oy=24,P=(x,y)=>`${(ox+x*k).toFixed(1)},${(oy+y*k).toFixed(1)}`;
+ const g=`<polygon points="${P(0,0)} ${P(W-w2,0)} ${P(W-w2,h2)} ${P(W,h2)} ${P(W,H)} ${P(0,H)}" fill="${QG}" fill-opacity=".15" stroke="${QI}" stroke-width="2.5" stroke-linejoin="round"/>`
+ +tx(ox+W*k/2,oy+H*k+18,W+' cm','text-anchor="middle" class="lbl"')+tx(ox-8,oy+H*k/2+4,H+' cm','text-anchor="end" class="lbl"')
+ +tx(ox+(W-w2/2)*k,oy+h2*k+18,w2+' cm','text-anchor="middle" class="lbl"')+tx(ox+(W-w2)*k+6,oy+h2*k/2+5,h2+' cm','class="lbl"');
+ return SV(270,oy+H*k+44,g+NDA(8,oy+H*k+38),'Compound L-shaped area');}
+function trapSVG(a,b,h){const k=Math.min(200/b,110/h),bw=b*k,aw=a*k,hh=h*k,ox=40,oy=20,ax=ox+(bw-aw)*.35;
+ return SV(280,hh+70,`<polygon points="${ax},${oy} ${ax+aw},${oy} ${ox+bw},${oy+hh} ${ox},${oy+hh}" fill="${QY}" fill-opacity=".2" stroke="${QI}" stroke-width="2.5" stroke-linejoin="round"/>`+ln(ax+aw*.5,oy,ax+aw*.5,oy+hh,'stroke-dasharray="5 4"')+`<rect x="${ax+aw*.5}" y="${oy+hh-9}" width="9" height="9" fill="none" stroke="${QI}" stroke-width="1.5"/>`
+ +tx(ax+aw/2,oy-6,a+' cm','text-anchor="middle" class="lbl"')+tx(ox+bw/2,oy+hh+18,b+' cm','text-anchor="middle" class="lbl"')+tx(ax+aw*.5+8,oy+hh/2+4,h+' cm','class="lbl"')+NDA(8,hh+64),'Trapezium with parallel sides and height labelled');}
+function prismSVG(b,h,l){const k=Math.min(110/b,90/h),bw=b*k,hh=h*k,ox=30,oy=160,dx=110,dy=-50;const A=[ox,oy],B=[ox+bw,oy],C=[ox+bw/2,oy-hh],sh=p=>[p[0]+dx,p[1]+dy];
+ const pt=p=>p.map(v=>v.toFixed(1)).join(',');const [A2,B2,C2]=[sh(A),sh(B),sh(C)];
+ return SV(300,196,`<polygon points="${pt(C)} ${pt(C2)} ${pt(B2)} ${pt(B)}" fill="${QA}" fill-opacity=".1" stroke="${QI}" stroke-width="2" stroke-linejoin="round"/><line x1="${A2[0]}" y1="${A2[1]}" x2="${B2[0]}" y2="${B2[1]}" stroke="${QI}" stroke-width="1.5" stroke-dasharray="5 4"/><line x1="${A2[0]}" y1="${A2[1]}" x2="${C2[0]}" y2="${C2[1]}" stroke="${QI}" stroke-width="1.5" stroke-dasharray="5 4"/><line x1="${A[0]}" y1="${A[1]}" x2="${A2[0]}" y2="${A2[1]}" stroke="${QI}" stroke-width="1.5" stroke-dasharray="5 4"/>
+ <polygon points="${pt(A)} ${pt(B)} ${pt(C)}" fill="${QA}" fill-opacity=".22" stroke="${QI}" stroke-width="2.5" stroke-linejoin="round"/>${ln(C[0],C[1],C[0],oy,'stroke-dasharray="4 3" stroke-width="1.5"')}
+ ${tx(ox+bw/2,oy+18,b+' cm','text-anchor="middle" class="lbl"')}${tx(C[0]+6,oy-hh/2,h+' cm','class="lbl"')}${tx((B[0]+B2[0])/2+10,(B[1]+B2[1])/2+12,l+' cm','class="lbl"')}${NDA(8,192)}`,'Triangular prism');}
+function quadSVG(a,b,c){return SV(260,190,`<polygon points="40,150 210,170 230,40 90,30" fill="${QG}" fill-opacity=".14" stroke="${QI}" stroke-width="2.5" stroke-linejoin="round"/>${tx(58,142,a+'°','class="lbl"')}${tx(196,156,b+'°','text-anchor="end" class="lbl"')}${tx(214,60,c+'°','text-anchor="end" class="lbl"')}${tx(98,54,'x','class="lbl big it"')}${NDA(8,186)}`,'Quadrilateral with three angles given and one marked x');}
+function rightSVG(a,b,la,lb,lc){const k=Math.min(190/a,130/b),aw=a*k,bh=b*k,ox=46,oy=150;const A=[ox,oy-bh],B=[ox,oy],C=[ox+aw,oy];
+ return SV(270,190,`<polygon points="${A.join(',')} ${B.join(',')} ${C.join(',')}" fill="${QA}" fill-opacity=".14" stroke="${QI}" stroke-width="2.5" stroke-linejoin="round"/><rect x="${ox}" y="${oy-12}" width="12" height="12" fill="none" stroke="${QI}" stroke-width="1.5"/>
+ ${tx(ox+aw/2,oy+20,la,'text-anchor="middle" class="lbl"')}${tx(ox-8,oy-bh/2+4,lb,'text-anchor="end" class="lbl"')}${tx(ox+aw/2+10,oy-bh/2-6,lc,'class="lbl"')}${NDA(8,186)}`,'Right-angled triangle');}
+function trigSVG(th,lh,lo,la){const r=th*Math.PI/180;let hyp=200,adj=hyp*Math.cos(r),opp=hyp*Math.sin(r);const k=Math.min(1,130/opp,210/adj);adj*=k;opp*=k;const ox=30,oy=158;
+ const A=[ox,oy],B=[ox+adj,oy],C=[ox+adj,oy-opp];const arc=`M${ox+30} ${oy} A30 30 0 0 0 ${(ox+30*Math.cos(r)).toFixed(1)} ${(oy-30*Math.sin(r)).toFixed(1)}`;
+ return SV(280,192,`<polygon points="${A.join(',')} ${B.join(',')} ${C.map(v=>v.toFixed(1)).join(',')}" fill="${QY}" fill-opacity=".18" stroke="${QI}" stroke-width="2.5" stroke-linejoin="round"/><rect x="${B[0]-12}" y="${oy-12}" width="12" height="12" fill="none" stroke="${QI}" stroke-width="1.5"/><path d="${arc}" fill="none" stroke="${QC}" stroke-width="2"/>
+ ${tx(ox+36,oy-8,th+'°','class="lbl"')}${tx(ox+adj/2,oy+18,la,'text-anchor="middle" class="lbl"')}${tx(B[0]+8,oy-opp/2+4,lo,'class="lbl"')}${tx(ox+adj/2-14,oy-opp/2-8,lh,'text-anchor="end" class="lbl"')}${NDA(150,188)}`,'Right-angled triangle with an angle marked');}
+function bearSVG(th){const r=th*Math.PI/180,A=[120,128],B=[A[0]+92*Math.sin(r),A[1]-92*Math.cos(r)];const big=th>180?1:0;
+ const arc=`M${A[0]} ${A[1]-34} A34 34 0 ${big} 1 ${(A[0]+34*Math.sin(r)).toFixed(1)} ${(A[1]-34*Math.cos(r)).toFixed(1)}`;
+ const north=(p,dash)=>`<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${p[0].toFixed(1)}" y2="${(p[1]-54).toFixed(1)}" stroke="${QI}" stroke-width="2" ${dash?'stroke-dasharray="4 4"':''}/><path d="M${p[0].toFixed(1)} ${(p[1]-60).toFixed(1)} l-5 9 h10 z" fill="${QI}"/>`+tx(p[0],p[1]-64,'N','text-anchor="middle" class="lbl"');
+ const la=th+(th>180?-180:0)/1;const mid=(th/2)*Math.PI/180;
+ return SV(240,250,north(A)+north(B,true)+ln(A[0],A[1],B[0],B[1])+`<path d="${arc}" fill="none" stroke="${QC}" stroke-width="2.5"/>`+tx(A[0]+50*Math.sin(mid),A[1]-50*Math.cos(mid)+4,th+'°','text-anchor="middle" class="lbl"')
+ +`<circle cx="${A[0]}" cy="${A[1]}" r="4" fill="${QI}"/><circle cx="${B[0].toFixed(1)}" cy="${B[1].toFixed(1)}" r="4" fill="${QI}"/>`+tx(A[0]-16*Math.sin(r)-(Math.sin(r)>=0?14:-6),A[1]+16*Math.cos(r)+(Math.cos(r)>=0?12:0),'A','class="lbl big"')+tx(B[0]+14*Math.sin(r)+(Math.sin(r)>=0?2:-12),B[1]-14*Math.cos(r)+(Math.cos(r)>=0?-2:12),'B','class="lbl big"'),`Bearing of B from A is ${th} degrees`);}
+function scaleSVG(max,major,minor,val,unit){const X=v=>22+v/max*296;let g=ln(22,60,318,60);const step=major/minor;
+ for(let k=0;k<=Math.round(max/step);k++){const v=k*step,isM=k%minor===0;g+=ln(X(v),60,X(v),isM?38:48,`stroke-width="${isM?2:1.4}"`);if(isM)g+=tx(X(v),30,+v.toFixed(2),'text-anchor="middle" class="sm"');}
+ g+=`<path d="M${X(val).toFixed(1)} 64 l-7 16 h14 z" fill="${QC}" stroke="${QI}" stroke-width="1.5"/>`+tx(332,84,unit,'text-anchor="end" class="sm"');
+ return SV(340,90,g,'Scale with an arrow pointing to a value');}
+function barSVG(cats,vals,step){const top=Math.ceil(Math.max(...vals)/step)*step+step,ox=44,oy=176,H=150,W=270,bw=W/cats.length,Y=v=>oy-v/top*H;let g='';
+ for(let v=0;v<=top;v+=step)g+=`<line x1="${ox}" y1="${Y(v)}" x2="${ox+W}" y2="${Y(v)}" stroke="#d3e2dc"/>`+tx(ox-6,Y(v)+4,v,'text-anchor="end" class="sm"');
+ cats.forEach((c,i)=>{g+=`<rect x="${(ox+i*bw+bw*.18).toFixed(1)}" y="${Y(vals[i]).toFixed(1)}" width="${(bw*.64).toFixed(1)}" height="${(oy-Y(vals[i])).toFixed(1)}" fill="${PIE_COLS[i%6]}" stroke="${QI}" stroke-width="1.5"/>`+tx(ox+i*bw+bw/2,oy+16,c,'text-anchor="middle" class="sm"');});
+ g+=ln(ox,oy,ox+W,oy)+ln(ox,oy,ox,oy-H)+`<text transform="translate(14 ${oy-H/2}) rotate(-90)" text-anchor="middle" class="sm">Number of students</text>`;
+ return SV(330,200,g,'Bar chart');}
+function pieSVG(secs){let a0=-90,g='';const cx=92,cy=96,r=78;
+ secs.forEach((s,i)=>{const a1=a0+s.angle,p=a=>[cx+r*Math.cos(a*Math.PI/180),cy+r*Math.sin(a*Math.PI/180)],[x0,y0]=p(a0),[x1,y1]=p(a1);
+  g+=`<path d="M${cx} ${cy} L${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${s.angle>180?1:0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z" fill="${PIE_COLS[i]}" stroke="#fff" stroke-width="2"/>`;
+  const mid=(a0+a1)/2*Math.PI/180;g+=tx(cx+50*Math.cos(mid),cy+50*Math.sin(mid)+4,s.angle+'°','text-anchor="middle" class="pie"');
+  g+=`<rect x="196" y="${32+i*26}" width="14" height="14" rx="3" fill="${PIE_COLS[i]}" stroke="${QI}" stroke-width="1"/>`+tx(216,44+i*26,s.label);a0=a1;});
+ g+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${QI}" stroke-width="2"/>`;
+ return SV(310,194,g,'Pie chart with angles labelled');}
+function treeSVG(p){const q=+(1-p).toFixed(2),L=(x1,y1,x2,y2,t)=>ln(x1,y1,x2,y2)+tx((x1+x2)/2-4,(y1+y2)/2-6,t,'text-anchor="middle" class="lbl"');
+ let g=tx(80,16,'1st counter','text-anchor="middle" class="sm"')+tx(200,16,'2nd counter','text-anchor="middle" class="sm"');
+ g+=L(20,110,120,62,p)+L(20,110,120,160,q)+tx(128,66,'Red','class="lbl"')+tx(128,164,'Blue','class="lbl"');
+ g+=L(166,62,250,34,p)+L(166,62,250,88,q)+L(166,160,250,134,p)+L(166,160,250,186,q);
+ [['Red',38],['Blue',92],['Red',138],['Blue',190]].forEach(([t,y])=>g+=tx(256,y,t,'class="lbl"'));
+ return SV(310,200,g,`Tree diagram, probability of red ${p}, blue ${q}, for two counters`);}
+
+/* ---- the generators ---- */
+const GUIDE={
+number:[
+ lv=>{const set=new Set();while(set.size<5){const dp=R(1,3),v=+(R(1,999)/1000).toFixed(dp);if(v>0)set.add(v);}const arr=[...set],s=[...arr].sort((a,b)=>a-b),big=Math.random()<.5,ans=big?s[4]:s[0];
+  return {sub:'Place value',text:`Which of these numbers is the ${big?'largest':'smallest'}?<br><span class="num">${arr.join('   ')}</span>`,ans,show:''+ans,exp:`Compare the tenths first, then the hundredths, then the thousandths. In order: ${s.join(', ')}.`,hint:'Line up the decimal points and compare one column at a time.'};},
+ lv=>{const a=R(lv===1?12:21,lv===3?399:99),b=R(11,lv===1?19:59),ans=a*b,t=b-b%10,u=b%10;
+  return {sub:'Written multiplication',text:`Work out ${a} × ${b} without a calculator.`,ans,show:''+ans,exp:`Split ${b} into ${t} + ${u}. ${a} × ${t} = ${a*t} and ${a} × ${u} = ${a*u}. Add them: ${a*t} + ${a*u} = ${ans}.`,hint:'Split the second number into tens and units, multiply each part, then add.'};},
+ lv=>{const d=lv===3?R(12,25):R(3,9),q=R(lv===1?12:21,lv===1?99:199),n=d*q;
+  return {sub:'Short division',text:`Work out ${n} ÷ ${d} without a calculator.`,ans:q,show:''+q,exp:`Using short division, ${d} goes into ${n} exactly ${q} times. Check: ${q} × ${d} = ${n}.`,hint:`Write out the first few multiples of ${d} to help you.`};},
+ lv=>{if(Math.random()<.5){const a=R(2,9),b=R(2,9),k=lv===1?1:P([1,2]),A=a/10,B=+(b/10**k).toFixed(k),ans=+(a*b/10**(1+k)).toFixed(4);
+   return {sub:'Decimals',text:`Work out ${A} × ${B}`,ans,show:''+ans,exp:`Ignore the decimal points: ${a} × ${b} = ${a*b}. The question has ${1+k} decimal places in total, so the answer does too: ${ans}.`,hint:'Multiply the digits, then count the decimal places.'};}
+  const d=R(2,9),q=R(2,12),A=+(d*q/10).toFixed(1),B=d/10;return {sub:'Decimals',text:`Work out ${A} ÷ ${B}`,ans:q,show:''+q,exp:`Multiply both numbers by 10 so you are dividing by a whole number: ${d*q} ÷ ${d} = ${q}.`,hint:'Multiply both numbers by 10 first.'};},
+ lv=>{const r1=P([20,30,40,50,60,70,80,90]),r2=R(2,9),r3=P([2,3,4,5,6].filter(x=>(r1*r2)%x===0)),a=(r1+R(-4,4)+R(1,9)/10).toFixed(1),b=(r2+R(-3,3)/10+R(1,9)/100).toFixed(2),c=(r3+R(-3,3)/10).toFixed(1),ans=r1*r2/r3;
+  return {sub:'Estimating',text:`Estimate the value of (${a} × ${b}) ÷ ${c} by rounding each number to 1 significant figure.`,ans,show:''+ans,exp:`Round each number: ${a} ≈ ${r1}, ${b} ≈ ${r2}, ${c} ≈ ${r3}. Then (${r1} × ${r2}) ÷ ${r3} = ${r1*r2} ÷ ${r3} = ${ans}.`,hint:'Round every number to 1 significant figure before you calculate.'};},
+ lv=>{const u=P(lv===1?[1,10]:[1,10,0.1,5]),L=u===0.1?+(R(21,99)/10).toFixed(1):u*R(3,30),low=Math.random()<.5,unit=P(['cm','m','kg','g']),ans=+(low?L-u/2:L+u/2).toFixed(3),nn=u===1?'nearest whole number':u===0.1?'1 decimal place':`nearest ${u}`;
+  return {sub:'Bounds',text:`A measurement is ${L} ${unit}, rounded to the ${nn}. What is its ${low?'lower':'upper'} bound?`,ans,show:ans+' '+unit,exp:`Half of ${u} is ${u/2}. ${low?'Lower':'Upper'} bound = ${L} ${low?'−':'+'} ${u/2} = ${ans} ${unit}.`,hint:'Halve the unit you rounded to. Take it away for the lower bound, add it for the upper bound.'};},
+ lv=>{const t=P(['primes','primes','square','cube','tri']);
+  if(t==='primes'){const a=R(1,40),b=a+R(8,lv===1?12:20),ps=[];for(let n=a+1;n<b;n++)if(isPrime(n))ps.push(n);return {sub:'Special numbers',text:`How many prime numbers are there between ${a} and ${b}?`,ans:ps.length,show:''+ps.length,exp:ps.length?`The primes are ${ps.join(', ')}.`:'There are none in this range.',hint:'A prime has exactly two factors, 1 and itself. 1 is not prime.'};}
+  if(t==='square'){const n=R(6,15);return {sub:'Special numbers',text:`What is the ${ord(n)} square number?`,ans:n*n,show:''+n*n,exp:`The ${ord(n)} square number is ${n} × ${n} = ${n*n}.`,hint:'Square numbers go 1, 4, 9, 16, 25, …'};}
+  if(t==='cube'){const n=R(3,6);return {sub:'Special numbers',text:`What is the ${ord(n)} cube number?`,ans:n**3,show:''+n**3,exp:`${n} × ${n} × ${n} = ${n**3}.`,hint:'Cube numbers go 1, 8, 27, 64, …'};}
+  const n=R(5,12),v=n*(n+1)/2;return {sub:'Special numbers',text:`Triangle numbers go 1, 3, 6, 10, 15, … What is the ${ord(n)} triangle number?`,ans:v,show:''+v,exp:`Add one more each time: 1 + 2 + 3 + … + ${n} = ${v}.`,hint:'The gaps go up by 1 each time: +2, +3, +4, …'};},
+ lv=>{let a=R(1,lv===1?3:4),b=R(0,2),c=R(0,lv===1?1:2);const d=lv===3?R(0,1):0;if(b+c+d===0)b=1;const n=2**a*3**b*5**c*7**d,parts=[];[[2,a],[3,b],[5,c],[7,d]].forEach(([p,e])=>{if(e)parts.push(e>1?`${p}<sup>${e}</sup>`:''+p);});
+  if(Math.random()<.5)return {sub:'Prime factors',text:`Write ${n} as a product of prime factors in index form. What is the power of 2?`,ans:a,show:''+a,exp:`${n} = ${parts.join(' × ')}, so the power of 2 is ${a}.`,hint:'Keep halving until you reach an odd number, and count the halvings.'};
+  const L=d?7:c?5:b?3:2;return {sub:'Prime factors',text:`What is the largest prime factor of ${n}?`,ans:L,show:''+L,exp:`${n} = ${parts.join(' × ')}. The largest prime here is ${L}.`,hint:'Draw a factor tree until every branch ends in a prime.'};},
+ lv=>{const a=+(R(11,99)/10).toFixed(1);
+  if(lv>1&&Math.random()<.4){const n=R(2,4),val=+(a/10**n).toFixed(n+1);return {sub:'Standard form',text:`Write ${a} × 10<sup>−${n}</sup> as an ordinary number.`,ans:val,show:''+val,exp:`A negative power of 10 means move the decimal point ${n} places to the left: ${val}.`,hint:'Negative power: the number is small, so move the point left.'};}
+  const n=R(2,5),val=Math.round(a*10**n),vs=val.toLocaleString('en-GB');
+  if(Math.random()<.5)return {sub:'Standard form',text:`Write ${a} × 10<sup>${n}</sup> as an ordinary number.`,ans:val,show:vs,exp:`Move the decimal point ${n} places to the right: ${vs}.`,hint:'Positive power: move the decimal point right.'};
+  return {sub:'Standard form',text:`${vs} = ${a} × 10<sup>n</sup>. What is n?`,ans:n,show:''+n,exp:`The decimal point moves ${n} places to turn ${a} into ${vs}, so n = ${n}.`,hint:'Count how many places the decimal point moves.'};},
+ lv=>{const b=R(2,9),x=R(2,9),y=R(2,lv===1?5:9),t=P(lv===1?['mul','div']:['mul','div','pow']);
+  if(t==='mul')return {sub:'Index laws',text:`Write ${b}<sup>${x}</sup> × ${b}<sup>${y}</sup> as a single power of ${b}. What is the power?`,ans:x+y,show:''+(x+y),exp:`When you multiply powers of the same number, add the powers: ${x} + ${y} = ${x+y}, so ${b}<sup>${x+y}</sup>.`,hint:'Multiplying means add the powers.'};
+  if(t==='div')return {sub:'Index laws',text:`Write ${b}<sup>${x+y}</sup> ÷ ${b}<sup>${y}</sup> as a single power of ${b}. What is the power?`,ans:x,show:''+x,exp:`When you divide powers of the same number, subtract the powers: ${x+y} − ${y} = ${x}, so ${b}<sup>${x}</sup>.`,hint:'Dividing means subtract the powers.'};
+  return {sub:'Index laws',text:`Write (${b}<sup>${x}</sup>)<sup>${y}</sup> as a single power of ${b}. What is the power?`,ans:x*y,show:''+x*y,exp:`A power of a power means multiply the powers: ${x} × ${y} = ${x*y}.`,hint:'Power of a power means multiply the powers.'};},
+ lv=>{const a=R(2,15),both=R(1,10),b=R(2,15),out=R(1,12),tot=a+both+b+out;
+  const qs=[['like apples',a+both,`Add everything inside circle A: ${a} + ${both} = ${a+both}.`],['like bananas but not apples',b,`That is the part of B outside A: ${b}.`],['like both fruits',both,`That is the overlap in the middle: ${both}.`],['like neither fruit',out,`That is the number outside both circles: ${out}.`],['like apples or bananas or both',a+both+b,`Add everything inside the circles: ${a} + ${both} + ${b} = ${a+both+b}.`],['were asked altogether',tot,`Add every number in the diagram: ${a} + ${both} + ${b} + ${out} = ${tot}.`]];
+  const [what,ans,exp]=P(lv===1?qs.slice(0,4):qs);
+  return {sub:'Venn diagrams',text:`The Venn diagram shows which fruits some people like. A = apples, B = bananas. How many people ${what}?`,img:vennSVG(a,both,b,out),ans,show:''+ans,exp,hint:'The overlap counts people in both groups. The number outside the circles is in neither.'};}
+],
+algebra:[
+ lv=>{const a=R(-6,9)||2,b=R(-6,9)||3,br=v=>v<0?`(x − ${-v})`:`(x + ${v})`,s=a+b,p=a*b,x=Math.random()<.5,full=`x²${tm(s,'x')}${tm(p,'')}`;
+  return {sub:'Expanding brackets',text:`Expand and simplify ${br(a)}${br(b)}. What is the ${x?'coefficient of x':'number term'}?`,ans:x?s:p,show:m(x?s:p),exp:`Multiply every term in the first bracket by every term in the second: x² ${a<0?'−':'+'} ${Math.abs(a)}x ${b<0?'−':'+'} ${Math.abs(b)}x ${p<0?'−':'+'} ${Math.abs(p)}. Collect like terms: ${full}.`,hint:'Use FOIL: First, Outside, Inside, Last.'};},
+ lv=>{const a=R(1,9),b=R(1,9)*(lv>1&&Math.random()<.4?-1:1),s=a+b,p=a*b;
+  return {sub:'Factorising quadratics',text:`x²${tm(s,'x')}${tm(p,'')} = (x + ${a})(x + ☐). What number goes in the box? (It may be negative.)`,ans:b,show:m(b),exp:`You need two numbers that multiply to make ${m(p)} and add to make ${m(s)}. They are ${a} and ${m(b)}.`,hint:'Find two numbers that multiply to the number term and add to the x coefficient.'};},
+ lv=>{const x=R(lv===1?1:-3,10),c=R(1,6),a=c+R(1,5),b=R(-12,12),d=a*x+b-c*x,lhs=`${a}x${tm(b,'')}`,rhs=`${c===1?'':c}x${tm(d,'')}`;
+  return {sub:'Solving equations',text:`Solve ${lhs} = ${rhs}`,ans:x,show:'x = '+m(x),exp:`Take ${c===1?'':c}x from both sides: ${a-c===1?'':a-c}x${tm(b,'')} = ${m(d)}. ${b<0?'Add':'Subtract'} ${Math.abs(b)}: ${a-c===1?'':a-c}x = ${m(d-b)}. ${a-c>1?`Divide by ${a-c}: `:''}x = ${m(x)}.`,hint:'Get all the x terms on one side first.'};},
+ lv=>{const f=P(['v','F','P','C']);
+  if(f==='v'){const u=R(0,20),a=R(2,10),t=R(2,8);return {sub:'Using formulas',text:`Use the formula v = u + at to find v when u = ${u}, a = ${a} and t = ${t}.`,ans:u+a*t,show:''+(u+a*t),exp:`v = ${u} + ${a} × ${t} = ${u} + ${a*t} = ${u+a*t}.`,hint:'at means a × t. Multiply before you add.'};}
+  if(f==='F'){const c=5*R(0,8);return {sub:'Using formulas',text:`To change °C to °F, use F = 1.8C + 32. What is ${c}°C in °F?`,ans:1.8*c+32,show:(1.8*c+32)+'°F',exp:`F = 1.8 × ${c} + 32 = ${+(1.8*c).toFixed(1)} + 32 = ${1.8*c+32}.`,hint:'Multiply by 1.8 first, then add 32.'};}
+  if(f==='P'){const l=R(3,20),w=R(2,15);return {sub:'Using formulas',text:`The perimeter of a rectangle is P = 2(l + w). Find P when l = ${l} cm and w = ${w} cm.`,ans:2*(l+w),show:2*(l+w)+' cm',exp:`P = 2 × (${l} + ${w}) = 2 × ${l+w} = ${2*(l+w)} cm.`,hint:'Brackets first.'};}
+  const base=P([20,25,30,35]),rate=P([8,10,12,15]),h=lv===1?R(2,6):R(2,6)+0.5,C=base+rate*h;
+  return {sub:'Using formulas',text:`A plumber charges C = ${base} + ${rate}h pounds for h hours of work. How much does a ${h}-hour job cost?`,ans:C,show:'£'+money(C),exp:`C = ${base} + ${rate} × ${h} = ${base} + ${money(rate*h)} = £${money(C)}.`,hint:'Replace h with the number of hours.'};},
+ lv=>{if(lv>1&&Math.random()<.3){const a=R(1,5),r=P([2,3]),t=[a,a*r,a*r*r,a*r**3];return {sub:'Sequences',text:`What is the next term in the sequence ${t.join(', ')}, …?`,ans:a*r**4,show:''+a*r**4,exp:`Each term is multiplied by ${r}. ${t[3]} × ${r} = ${a*r**4}.`,hint:'Divide each term by the one before it.'};}
+  const a1=R(-5,15),d=R(2,9)*(lv>1&&Math.random()<.3?-1:1),k=P(lv===1?[10,12,20]:[20,50,100]),t=[0,1,2,3].map(i=>a1+i*d),c=a1-d,ans=d*k+c;
+  return {sub:'Sequences',text:`Here is a sequence: ${t.map(m).join(', ')}, … Find the ${ord(k)} term.`,ans,show:m(ans),exp:`The terms go up by ${m(d)} each time, so the nth term is ${m(d)}n${tm(c,'')}. Put n = ${k}: ${m(d)} × ${k}${tm(c,'')} = ${m(ans)}.`,hint:'Find the common difference, then build the nth term.'};},
+ lv=>{const lo=R(-5,3),hi=lo+R(2,6),lc=Math.random()<.5,hc=Math.random()<.5,st=lc?lo:lo+1,en=hc?hi:hi-1,list=[];for(let v=st;v<=en;v++)list.push(m(v));
+  return {sub:'Inequalities',text:'The number line shows an inequality. How many whole numbers (integers) satisfy it?',img:numLineSVG(lo,hi,lc,hc),ans:list.length,show:''+list.length,exp:`It shows ${m(lo)} ${lc?'≤':'<'} x ${hc?'≤':'<'} ${m(hi)}. A filled circle includes the number and an open circle does not. The integers are ${list.join(', ')}.`,hint:'Filled circle: included. Open circle: not included.'};},
+ lv=>{const a=R(2,7),b=R(1,15),c=b+a*R(1,6)+R(0,a-1),lim=(c-b)/a,ans=Number.isInteger(lim)?lim-1:Math.floor(lim);
+  return {sub:'Inequalities',text:`Find the largest integer x such that ${a}x + ${b} < ${c}.`,ans,show:''+ans,exp:`Subtract ${b}: ${a}x < ${c-b}. Divide by ${a}: x < ${+lim.toFixed(2)}. The largest integer below this is ${ans}.`,hint:'Solve it like an equation, then pick the biggest whole number that fits.'};},
+ lv=>{const x=R(1,9),y=R(1,9),askX=Math.random()<.5;
+  if(lv===1){return {sub:'Simultaneous equations',text:`x + y = ${x+y}<br>x − y = ${m(x-y)}<br>Find ${askX?'x':'y'}.`,ans:askX?x:y,show:askX?'x = '+x:'y = '+y,exp:`Add the equations: 2x = ${2*x}, so x = ${x}. Then y = ${x+y} − ${x} = ${y}.`,hint:'Add the two equations to get rid of y.'};}
+  const a=R(2,4);return {sub:'Simultaneous equations',text:`${a}x + y = ${a*x+y}<br>x + y = ${x+y}<br>Find ${askX?'x':'y'}.`,ans:askX?x:y,show:askX?'x = '+x:'y = '+y,exp:`Subtract the second equation from the first: ${a-1===1?'':a-1}x = ${(a-1)*x}, so x = ${x}. Then y = ${x+y} − ${x} = ${y}.`,hint:'Subtract one equation from the other to get rid of y.'};},
+ lv=>{let x1,x2,y1,y2;do{x1=R(0,10);x2=R(0,10);y1=R(0,10);y2=R(0,10);}while((x1+x2)%2||(y1+y2)%2||Math.abs(x1-x2)+Math.abs(y1-y2)<4);const askX=Math.random()<.5,mx=(x1+x2)/2,my=(y1+y2)/2;
+  return {sub:'Coordinates and midpoints',text:`Find the midpoint of A(${x1}, ${y1}) and B(${x2}, ${y2}). What is its ${askX?'x':'y'}-coordinate?`,img:gridSVG([{x:x1,y:y1,label:'A'},{x:x2,y:y2,label:'B'}],[[x1,y1],[x2,y2]],`Points A(${x1}, ${y1}) and B(${x2}, ${y2}) on a grid`),ans:askX?mx:my,show:''+(askX?mx:my),exp:`Midpoint = ((${x1} + ${x2}) ÷ 2, (${y1} + ${y2}) ÷ 2) = (${mx}, ${my}).`,hint:'Add the coordinates and halve them.'};},
+ lv=>{const g=P(lv===1?[1,2,3]:[1,2,3,-1,-2,0.5,-0.5]);let x0,y0,dx;do{dx=Math.abs(g)===0.5?P([2,4]):P([1,2,3]);x0=R(0,8);y0=R(0,10);}while(x0+dx>10||y0+g*dx<0||y0+g*dx>10||!Number.isInteger(y0+g*dx));
+  const x1=x0+dx,y1=y0+g*dx,ext=t=>[x0+t,y0+g*t];let t0=-10,t1=10;[[-x0,10-x0]].forEach(()=>{});const ts=[];for(const t of [-x0,10-x0,g?(0-y0)/g:-99,g?(10-y0)/g:99])ts.push(t);
+  const valid=ts.filter(t=>{const [x,y]=ext(t);return x>=-1e-9&&x<=10+1e-9&&y>=-1e-9&&y<=10+1e-9;}).sort((a,b)=>a-b);t0=valid[0];t1=valid[valid.length-1];
+  return {sub:'Gradients',text:'The line passes through the two marked points. What is its gradient?',img:gridSVG([{x:x0,y:y0,label:`(${x0}, ${y0})`},{x:x1,y:y1,label:`(${x1}, ${y1})`}],[ext(t0),ext(t1)],'A straight line on a grid through two marked points'),ans:g,show:m(g),exp:`Gradient = change in y ÷ change in x = ${m(y1-y0)} ÷ ${dx} = ${m(g)}.${g<0?' The line slopes down, so the gradient is negative.':''}`,hint:'Gradient = up ÷ across. Downhill lines have negative gradients.'};},
+ lv=>{const g=R(-5,6)||2,c=R(-9,9),askG=Math.random()<.5;
+  return {sub:'y = mx + c',text:`The line y = ${g===1?'':g===-1?'−':m(g)}x${tm(c,'')}. What is its ${askG?'gradient':'y-intercept (where it crosses the y-axis)'}?`,ans:askG?g:c,show:m(askG?g:c),exp:`In y = mx + c, m is the gradient and c is the y-intercept. Here m = ${m(g)} and c = ${m(c)}.`,hint:'Compare it with y = mx + c.'};},
+ lv=>{let v,t1,d1,s,t3;do{v=P([10,20,30,40,60]);t1=P([30,60,90]);d1=v*t1/60;s=P([15,30,45]);t3=P([30,45,60,90]);}while(d1>60||!Number.isInteger(d1)||t1+s+t3>240||!Number.isInteger(d1*60/t3));
+  const T=t1+s+t3,tMax=Math.ceil(T/30)*30,dStep=d1>30?10:5,dMax=Math.ceil(d1/dStep)*dStep+dStep,pts=[[0,0],[t1,d1],[t1+s,d1],[T,0]],v3=d1*60/t3,ask=P(['speed','stop','back']);
+  const img=dtSVG(pts,tMax,dMax,dStep);
+  if(ask==='speed')return {sub:'Distance-time graphs',text:'The graph shows a cycle ride. What was the average speed for the first part of the journey, in km/h?',img,ans:v,show:v+' km/h',exp:`The first part covers ${d1} km in ${t1} minutes (${t1/60} hours). Speed = ${d1} ÷ ${t1/60} = ${v} km/h.`,hint:'Speed = distance ÷ time. Change minutes into hours first.'};
+  if(ask==='stop')return {sub:'Distance-time graphs',text:'The graph shows a cycle ride. For how many minutes did the cyclist stop?',img,ans:s,show:s+' minutes',exp:`A flat line means no movement. It runs from ${t1} to ${t1+s} minutes, so ${s} minutes.`,hint:'Look for the flat part of the graph.'};
+  return {sub:'Distance-time graphs',text:'The graph shows a cycle ride. What was the average speed on the way home, in km/h?',img,ans:v3,show:v3+' km/h',exp:`The way home covers ${d1} km in ${t3} minutes (${t3/60} hours). Speed = ${d1} ÷ ${t3/60} = ${v3} km/h.`,hint:'The way home is the part sloping back down to 0.'};},
+ lv=>{const b=R(-5,5),c=R(-9,9),x=R(-4,4),y=x*x+b*x+c;
+  return {sub:'Quadratic graphs',text:`Complete the table of values for y = x²${tm(b,'x')}${tm(c,'')}. What is y when x = ${m(x)}?`,img:table(['x',m(x-1),m(x),m(x+1)],[['y',m((x-1)**2+b*(x-1)+c),'?',m((x+1)**2+b*(x+1)+c)]]),ans:y,show:m(y),exp:`y = (${m(x)})²${b?` + ${pm(b)} × ${pm(x)}`:''}${tm(c,'')} = ${x*x}${b?` ${b*x<0?'−':'+'} ${Math.abs(b*x)}`:''}${tm(c,'')} = ${m(y)}.`,hint:'A negative number squared is positive.'};}
+],
+geometry:[
+ lv=>{const n=P([5,6,8,9,10]),name={5:'pentagon',6:'hexagon',8:'octagon',9:'nonagon',10:'decagon'}[n],t=P(lv===1?['sum','ext']:['sum','ext','int']),ext=360/n,img=polySVG(n);
+  if(t==='sum')return {sub:'Polygons',text:`What do the interior angles of a ${name} add up to?`,img,ans:(n-2)*180,show:(n-2)*180+'°',exp:`A ${name} splits into ${n-2} triangles. ${n-2} × 180° = ${(n-2)*180}°.`,hint:'Sum of interior angles = (number of sides − 2) × 180°.'};
+  if(t==='ext')return {sub:'Polygons',text:`What is the size of each exterior angle of a regular ${name}?`,img,ans:ext,show:ext+'°',exp:`Exterior angles add up to 360°. 360° ÷ ${n} = ${ext}°.`,hint:'Exterior angles always add up to 360°.'};
+  return {sub:'Polygons',text:`What is the size of each interior angle of a regular ${name}?`,img,ans:180-ext,show:(180-ext)+'°',exp:`Each exterior angle is 360° ÷ ${n} = ${ext}°. Interior = 180° − ${ext}° = ${180-ext}°.`,hint:'Interior + exterior = 180°.'};},
+ lv=>{const apex=2*R(10,70),base=(180-apex)/2;
+  if(Math.random()<.5)return {sub:'Triangles',text:'The triangle is isosceles. Find the angle marked x.',img:isoSVG(apex+'°','x'),ans:base,show:base+'°',exp:`The two base angles are equal. (180° − ${apex}°) ÷ 2 = ${base}°.`,hint:'Angles in a triangle add to 180°, and the base angles of an isosceles triangle are equal.'};
+  return {sub:'Triangles',text:'The triangle is isosceles. Find the angle marked x.',img:isoSVG('x',base+'°'),ans:apex,show:apex+'°',exp:`Both base angles are ${base}°. 180° − ${base}° − ${base}° = ${apex}°.`,hint:'Both base angles are the same size.'};},
+ lv=>{const th=R(35,80),val=q=>q==='TR'||q==='BL'?th:180-th,rels=[['corresponding','TR','TR'],['corresponding','BL','BL'],['corresponding','TL','TL'],['alternate','BL','TR'],['alternate','BR','TL'],['co-interior','BL','TL'],['co-interior','BR','TR']],[rel,qU,qL]=P(rels),given=val(qU),ans=val(qL);
+  const why={corresponding:'Corresponding angles (F shape) are equal',alternate:'Alternate angles (Z shape) are equal','co-interior':`Co-interior angles (C shape) add up to 180°, so x = 180° − ${given}°`}[rel];
+  return {sub:'Parallel lines',text:'The two lines marked with arrows are parallel. Find the angle marked x.',img:parSVG(qU,given+'°',qL,'x'),ans,show:ans+'°',exp:`${why}. x = ${ans}°.`,hint:'Look for an F, Z or C shape.'};},
+ lv=>{const W=R(8,16),H=R(6,14),w2=R(2,W-4),h2=R(2,H-3),area=W*H-w2*h2,per=2*(W+H),askA=lv===1||Math.random()<.6;
+  return {sub:'Perimeter and area',text:`Find the ${askA?'area':'perimeter'} of this shape.`,img:lSVG(W,H,w2,h2),ans:askA?area:per,show:askA?area+' cm²':per+' cm',exp:askA?`Big rectangle: ${W} × ${H} = ${W*H} cm². Take away the missing corner: ${w2} × ${h2} = ${w2*h2} cm². ${W*H} − ${w2*h2} = ${area} cm².`:`The missing corner doesn’t change the perimeter. The edges add up to the same as a ${W} by ${H} rectangle: 2 × (${W} + ${H}) = ${per} cm.`,hint:askA?'Treat it as a big rectangle with a piece cut out.':'Go all the way round adding every edge.'};},
+ lv=>{const a=R(3,10),b=a+R(2,8),h=R(2,10),ans=(a+b)*h/2;
+  return {sub:'Area',text:'Find the area of this trapezium.',img:trapSVG(a,b,h),ans,show:ans+' cm²',exp:`Area = ½ × (a + b) × h = ½ × (${a} + ${b}) × ${h} = ${ans} cm².`,hint:'Add the parallel sides, halve, then multiply by the height.'};},
+ lv=>{const b=2*R(1,5),h=R(3,9),l=R(4,15),v=b*h/2*l;
+  return {sub:'Volume',text:'Find the volume of this triangular prism.',img:prismSVG(b,h,l),ans:v,show:v+' cm³',exp:`Cross-section area = ½ × ${b} × ${h} = ${b*h/2} cm². Volume = ${b*h/2} × ${l} = ${v} cm³.`,hint:'Volume of a prism = area of cross-section × length.'};},
+ lv=>{if(Math.random()<.5){const l=R(2,10),w=R(2,8),h=R(2,8),sa=2*(l*w+l*h+w*h);return {sub:'Surface area',text:`A cuboid measures ${l} cm by ${w} cm by ${h} cm. Find its total surface area.`,ans:sa,show:sa+' cm²',exp:`There are three pairs of faces: 2 × (${l}×${w} + ${l}×${h} + ${w}×${h}) = 2 × (${l*w} + ${l*h} + ${w*h}) = ${sa} cm².`,hint:'Six faces, in three matching pairs.'};}
+  const r=R(2,8),h=R(3,15),ex=Math.PI*r*r*h,v=Math.round(ex*10)/10;return {sub:'Volume',text:`A cylinder has radius ${r} cm and height ${h} cm. Find its volume to 1 decimal place.`,ans:v,tol:Math.max(.051,ex*.001),show:v.toFixed(1)+' cm³',exp:`Volume = π × r² × h = π × ${r*r} × ${h} = ${ex.toFixed(3)}… ≈ ${v.toFixed(1)} cm³.`,hint:'Area of the circle × height.'};},
+ lv=>{const c=P([['m','cm',100,()=>+(R(12,95)/10).toFixed(1)],['cm','m',1/100,()=>R(120,950)],['km','m',1000,()=>+(R(12,95)/10).toFixed(1)],['kg','g',1000,()=>+(R(12,95)/10).toFixed(1)],['g','kg',1/1000,()=>R(250,9500)],['litres','ml',1000,()=>+(R(5,40)/10).toFixed(1)],['ml','litres',1/1000,()=>R(200,4500)],['hours','minutes',60,()=>P([1.5,2.5,0.75,1.25,3.5,0.25])],['cm²','mm²',100,()=>R(2,30)],['m²','cm²',10000,()=>R(2,9)]].slice(0,lv===1?8:10)),v=c[3](),ans=+(v*c[2]).toFixed(4);
+  return {sub:'Unit conversions',text:`Convert ${v} ${c[0]} into ${c[1]}.`,ans,show:ans+' '+c[1],exp:`${c[2]>=1?`Multiply by ${c[2].toLocaleString('en-GB')}`:`Divide by ${(1/c[2]).toLocaleString('en-GB')}`}: ${v} ${c[0]} = ${ans} ${c[1]}.${c[0].includes('²')?' Area units are squared, so square the length conversion factor.':''}`,hint:c[0].includes('²')?'For area, square the conversion: 1 cm = 10 mm so 1 cm² = 100 mm².':'Big unit to small unit: multiply. Small to big: divide.'};},
+ lv=>{const cfg=P([[100,10,5,'g'],[500,100,5,'ml'],[5,1,10,'kg'],[100,20,4,'°C'],[300,50,5,'g'],[10,2,4,'cm']]),[max,major,minor,unit]=cfg,step=major/minor;let k;do{k=R(1,Math.round(max/step)-1);}while(k%minor===0&&Math.random()<.85);const val=+(k*step).toFixed(3);
+  return {sub:'Reading scales',text:'What value is the arrow pointing to?',img:scaleSVG(max,major,minor,val,unit),ans:val,show:val+' '+unit,exp:`Each big gap is ${major} and is split into ${minor} small gaps, so each small gap is ${major} ÷ ${minor} = ${+step.toFixed(3)}. The arrow points to ${val} ${unit}.`,hint:'Work out what one small gap is worth first.'};},
+ lv=>{const stops=shuffle(['Bus Station','Market Square','Hospital','Park Road','Leisure Centre','Library']).slice(0,4),gaps=[R(5,14),R(4,12),R(6,15)],first=60*R(7,9)+5*R(0,11),every=5*R(5,9),deps=[0,1,2].map(i=>first+i*every);
+  const at=(bus,s)=>deps[bus]+gaps.slice(0,s).reduce((a,b)=>a+b,0);
+  const img=rtable(stops.map((s,si)=>[s,...deps.map((_,b)=>hhmm(at(b,si)))]));
+  if(Math.random()<.5){const b=R(0,2),i=R(0,1),j=R(i+2,3),ans=at(b,j)-at(b,i);return {sub:'Timetables',text:`How many minutes does the ${hhmm(deps[b])} bus take to get from ${stops[i]} to ${stops[j]}?`,img,ans,show:ans+' minutes',exp:`It leaves ${stops[i]} at ${hhmm(at(b,i))} and reaches ${stops[j]} at ${hhmm(at(b,j))}. That is ${ans} minutes.`,hint:'Find both times in the same column, then count on.'};}
+  const s=R(1,3),b=R(1,2),arr=at(b,s)-R(3,every-3),ans=at(b,s)-arr;return {sub:'Timetables',text:`Sam arrives at ${stops[s]} at ${hhmm(arr)}. How many minutes will Sam wait for the next bus?`,img,ans,show:ans+' minutes',exp:`The next bus at ${stops[s]} is at ${hhmm(at(b,s))}. From ${hhmm(arr)} to ${hhmm(at(b,s))} is ${ans} minutes.`,hint:'Read along the row for that stop.'};},
+ lv=>{const d=P([2,2.5,3,4,5,7.5,8,10,11]),V=R(2,20)*2,mass=d*V;
+  if(Math.random()<.5)return {sub:'Compound measures',text:`An object has mass ${mass} g and volume ${V} cm³. What is its density in g/cm³?`,ans:d,show:d+' g/cm³',exp:`Density = mass ÷ volume = ${mass} ÷ ${V} = ${d} g/cm³.`,hint:'Density = mass ÷ volume.'};
+  return {sub:'Compound measures',text:`A metal has density ${d} g/cm³. What is the mass of ${V} cm³ of it?`,ans:mass,show:mass+' g',exp:`Mass = density × volume = ${d} × ${V} = ${mass} g.`,hint:'Mass = density × volume.'};},
+ lv=>{let th;do{th=5*R(2,70);}while(th%90===0);const back=(th+180)%360,pad=n=>String(n).padStart(3,'0');
+  return {sub:'Bearings',text:`The bearing of B from A is ${pad(th)}°. What is the bearing of A from B?`,img:bearSVG(th),ans:back,show:pad(back)+'°',exp:`The back bearing differs by 180°. ${pad(th)}° ${th<180?'+':'−'} 180° = ${pad(back)}°.`,hint:'Add 180° if the bearing is under 180°, otherwise subtract 180°.'};},
+ lv=>{const k=P([10000,25000,50000,100000,200000]),dcm=P(lv===1?[2,3,4,5,6,8]:[1.5,2.5,3.5,4,6,7.5]),km=+(dcm*k/100000).toFixed(3);
+  return {sub:'Maps and scale drawings',text:`A map has a scale of 1 : ${k.toLocaleString('en-GB')}. Two towns are ${dcm} cm apart on the map. How far apart are they in real life, in km?`,ans:km,show:km+' km',exp:`Real distance = ${dcm} × ${k.toLocaleString('en-GB')} = ${(dcm*k).toLocaleString('en-GB')} cm. Divide by 100,000 to get km: ${km} km.`,hint:'Multiply by the scale, then convert cm to km (÷ 100,000).'};},
+ lv=>{const [a,b,c]=P([[3,4,5],[6,8,10],[5,12,13],[8,15,17],[9,12,15],[12,16,20],[7,24,25],[15,20,25]]),sw=Math.random()<.5,A=sw?b:a,B=sw?a:b,hyp=lv===1||Math.random()<.5;
+  if(hyp)return {sub:'Pythagoras’ theorem',text:'Find the length of the side marked x.',img:rightSVG(A,B,A+' cm',B+' cm','x'),ans:c,show:c+' cm',exp:`x² = ${A}² + ${B}² = ${A*A} + ${B*B} = ${c*c}. x = √${c*c} = ${c} cm.`,hint:'Square the two short sides, add, then square root.'};
+  return {sub:'Pythagoras’ theorem',text:'Find the length of the side marked x.',img:rightSVG(A,B,'x',B+' cm',c+' cm'),ans:A,show:A+' cm',exp:`To find a shorter side, subtract: x² = ${c}² − ${B}² = ${c*c} − ${B*B} = ${A*A}. x = √${A*A} = ${A} cm.`,hint:'For a shorter side, subtract the squares instead of adding.'};},
+ lv=>{const th=R(25,65),h=R(5,20),r=th*Math.PI/180,opp=Math.round(h*Math.sin(r)*10)/10,adj=Math.round(h*Math.cos(r)*10)/10,askO=Math.random()<.5,ans=askO?opp:adj,ex=askO?h*Math.sin(r):h*Math.cos(r);
+  return {sub:'Trigonometry',text:'Find the length of the side marked x. Give your answer to 1 decimal place.',img:trigSVG(th,h+' cm',askO?'x':'',askO?'':'x'),ans,tol:.051,show:ans.toFixed(1)+' cm',exp:askO?`x is opposite the angle and you know the hypotenuse, so use SOH: x = ${h} × sin ${th}° = ${ex.toFixed(3)}… ≈ ${ans.toFixed(1)} cm.`:`x is adjacent to the angle and you know the hypotenuse, so use CAH: x = ${h} × cos ${th}° = ${ex.toFixed(3)}… ≈ ${ans.toFixed(1)} cm.`,hint:'Label the sides opposite, adjacent and hypotenuse, then pick SOH, CAH or TOA.'};},
+ lv=>{let a,b,c,d;do{a=R(55,140);b=R(55,140);c=R(55,140);d=360-a-b-c;}while(d<45||d>170);
+  return {sub:'Angles',text:'Find the angle marked x in this quadrilateral.',img:quadSVG(a,b,c),ans:d,show:d+'°',exp:`Angles in a quadrilateral add up to 360°. 360° − ${a}° − ${b}° − ${c}° = ${d}°.`,hint:'Angles in a quadrilateral add up to 360°.'};},
+ lv=>{const x=R(-5,5),y=R(-5,5),a=R(-6,6)||3,b=R(-6,6)||-2,askX=Math.random()<.5;
+  return {sub:'Transformations',text:`The point (${m(x)}, ${m(y)}) is translated by the vector ${colvec(a,b)}. What is the ${askX?'x':'y'}-coordinate of its new position?`,ans:askX?x+a:y+b,show:m(askX?x+a:y+b),exp:`The top number moves it across and the bottom number moves it up or down. New point: (${m(x)} ${a<0?'−':'+'} ${Math.abs(a)}, ${m(y)} ${b<0?'−':'+'} ${Math.abs(b)}) = (${m(x+a)}, ${m(y+b)}).`,hint:'Top number: left/right. Bottom number: up/down.'};}
+],
+fraction:[
+ lv=>{const p=P([5,10,15,20,25,30,40,50]),A=P([20,40,60,80,120,160,200,240,400]),up=Math.random()<.6,B=A*(100+(up?p:-p))/100;
+  return {sub:'Percentage change',text:`A price ${up?'rises':'falls'} from £${A} to £${money(B)}. What is the percentage ${up?'increase':'decrease'}?`,ans:p,show:p+'%',exp:`The change is £${money(Math.abs(B-A))}. Percentage change = ${money(Math.abs(B-A))} ÷ ${A} × 100 = ${p}%.`,hint:'Percentage change = change ÷ original × 100.'};},
+ lv=>{const y=P([20,25,40,50,80,200]),x=R(1,y-1),ans=Math.round(x*10000/y)/100,thing=P(['marbles','votes','counters','tickets']);
+  return {sub:'Percentages',text:`${x} out of ${y} ${thing} are red. What percentage are red?`,ans,show:ans+'%',exp:`${x} ÷ ${y} × 100 = ${ans}%.`,hint:'Divide, then multiply by 100.'};},
+ lv=>{const p=P([10,20,25,50]),up=Math.random()<.6,O=(p===25?4:p===50?2:10)*R(3,20),pc=up?100+p:100-p,N=O*pc/100;
+  return {sub:'Reverse percentages',text:`After a ${p}% ${up?'increase':'decrease'}, a price is £${money(N)}. What was the original price?`,ans:O,show:'£'+O,exp:`£${money(N)} is ${pc}% of the original. 1% = £${money(N)} ÷ ${pc} = £${money(O/100)}, so 100% = £${O}.`,hint:`The new price is ${pc}% of the original, not 100%.`};},
+ lv=>{const Pp=P([200,500,1000,1500,2000]),r=P([2,3,4,5]),n=R(2,lv===1?3:5);
+  if(lv===1||Math.random()<.5){const I=Pp*r*n/100;return {sub:'Simple interest',text:`£${Pp} is invested at ${r}% simple interest per year. How much interest is earned in ${n} years?`,ans:I,show:'£'+money(I),exp:`Each year earns ${r}% of £${Pp} = £${money(Pp*r/100)}. Over ${n} years: £${money(Pp*r/100)} × ${n} = £${money(I)}.`,hint:'Simple interest is the same amount every year.'};}
+  const v=Math.round(Pp*(1+r/100)**n*100)/100;return {sub:'Compound interest',text:`£${Pp} is invested at ${r}% compound interest per year. How much is it worth after ${n} years? Give your answer to the nearest penny.`,ans:v,tol:.011,show:'£'+v.toFixed(2),exp:`The multiplier is 1 + ${r} ÷ 100 = ${1+r/100}. Value = ${Pp} × ${1+r/100}<sup>${n}</sup> = £${v.toFixed(2)}.`,hint:'Amount × (multiplier) to the power of the number of years.'};},
+ lv=>{const shapes=P([[3,4],[4,4],[2,6],[3,5],[4,5],[2,5],[3,3],[4,6]]),[rw,cl]=shapes,n=rw*cl,k=R(1,n-1),g=gcd(k,n),cells=shuffle(Array.from({length:n},(_,i)=>i)).slice(0,k),sz=Math.min(40,260/cl,170/rw);let sv='';
+  for(let i=0;i<n;i++){const r=Math.floor(i/cl),c=i%cl;sv+=`<rect x="${(10+c*sz).toFixed(1)}" y="${(10+r*sz).toFixed(1)}" width="${sz.toFixed(1)}" height="${sz.toFixed(1)}" fill="${cells.includes(i)?QA:'#fff'}" fill-opacity="${cells.includes(i)?.75:1}" stroke="${QI}" stroke-width="2"/>`;}
+  return {sub:'Fractions of shapes',text:'What fraction of the shape is shaded? Give your answer in its simplest form, like 2/5.',img:SV(Math.round(20+cl*sz),Math.round(20+rw*sz),sv,`A grid of ${n} squares with ${k} shaded`),ans:k/n,exact:[k/g,n/g],show:`${k/g}/${n/g}`,exp:`${k} out of ${n} squares are shaded: ${k}/${n}${g>1?`. Divide top and bottom by ${g} to get ${k/g}/${n/g}`:', which is already in its simplest form'}.`,hint:'Count the shaded squares and the total squares, then simplify.'};},
+],
+ratio:[
+ lv=>{const w=R(2,6);let w2;do{w2=R(2,8);}while(w2===w);const L=w*w2/gcd(w,w2),tot=L*R(1,Math.max(1,Math.floor(36/L))),d=tot/w,job=P([['builders','build a wall','days'],['painters','paint a house','days'],['pumps','empty a pool','hours']]);
+  return {sub:'Inverse proportion',text:`${w} ${job[0]} take ${d} ${job[2]} to ${job[1]}. How long would ${w2} ${job[0]} take, working at the same rate?`,ans:tot/w2,show:`${tot/w2} ${job[2]}`,exp:`Total work = ${w} × ${d} = ${tot} ${job[0].slice(0,-1)}-${job[2]}. With ${w2} ${job[0]}: ${tot} ÷ ${w2} = ${tot/w2} ${job[2]}.`,hint:'More workers means less time. Find the total work first.'};},
+ lv=>{const n1=P([4,5,6,8]),n2=P([10,12,15,20]),u1=R(30,60),u2=u1+P([-6,-4,-3,-2,2,3,4,6]),c1=n1*u1,c2=n2*u2,best=Math.min(u1,u2);
+  return {sub:'Best buys',text:`Pack A has ${n1} pens for £${(c1/100).toFixed(2)}. Pack B has ${n2} pens for £${(c2/100).toFixed(2)}. Which pack is better value? Type the cost of one pen in that pack, in pence.`,ans:best,show:best+'p',exp:`Pack A: ${c1}p ÷ ${n1} = ${u1}p each. Pack B: ${c2}p ÷ ${n2} = ${u2}p each. Pack ${u1<u2?'A':'B'} is cheaper per pen at ${best}p.`,hint:'Work out the price of one pen in each pack.'};},
+ lv=>{const a=R(1,5),b=R(a+1,a+6),k=R(2,lv===1?8:15);
+  return {sub:'Ratio',text:`Amy and Ben share some sweets in the ratio ${a} : ${b}. Ben gets ${(b-a)*k} more sweets than Amy. How many sweets are there altogether?`,ans:(a+b)*k,show:''+(a+b)*k,exp:`The difference is ${b} − ${a} = ${b-a} parts, which is ${(b-a)*k} sweets, so 1 part = ${k}. Total = ${a+b} parts = ${(a+b)*k} sweets.`,hint:'Work out how many parts the difference is.'};},
+ lv=>{const a=R(1,7),b=R(1,9),g0=gcd(a,b),A=a/g0,B=b/g0,k=R(2,lv===1?6:12);if(A===B)return GUIDE.ratio[0](lv);
+  return {sub:'Simplifying ratios',text:`Write ${A*k} : ${B*k} in its simplest form. Type it like 2:3`,ans:A/B,ratio:[A,B],show:`${A}:${B}`,exp:`Divide both sides by ${k}, the highest common factor: ${A*k} ÷ ${k} = ${A} and ${B*k} ÷ ${k} = ${B}.`,hint:'Divide both numbers by the biggest number that goes into both.'};},
+ lv=>{const rate=P([1.15,1.2,1.25,1.4,1.1]),cur=P(['euros (€)','US dollars ($)']),sym=cur[0]==='e'?'€':'$',pounds=5*R(4,60);
+  if(lv===1||Math.random()<.5){const ans=+(pounds*rate).toFixed(2);return {sub:'Exchange rates',text:`£1 = ${sym}${rate}. How many ${cur} would you get for £${pounds}?`,ans,show:sym+money(ans),exp:`Multiply by the rate: ${pounds} × ${rate} = ${sym}${money(ans)}.`,hint:'Pounds to the other currency: multiply by the rate.'};}
+  const f=+(pounds*rate).toFixed(2);return {sub:'Exchange rates',text:`£1 = ${sym}${rate}. How many pounds is ${sym}${money(f)} worth?`,ans:pounds,show:'£'+pounds,tol:.011,exp:`Divide by the rate: ${money(f)} ÷ ${rate} = £${pounds}.`,hint:'Back to pounds: divide by the rate.'};},
+ lv=>{const v=P([20,30,40,45,50,60,80]),t=P([15,20,30,45,90,40]),d=v*t/60;if(!Number.isInteger(d))return GUIDE.ratio[2](lv);
+  return {sub:'Speed, distance, time',text:`A car travels ${d} km at an average speed of ${v} km/h. How many minutes does the journey take?`,ans:t,show:t+' minutes',exp:`Time = distance ÷ speed = ${d} ÷ ${v} = ${+(d/v).toFixed(4)} hours. × 60 = ${t} minutes.`,hint:'Time = distance ÷ speed, then change hours into minutes.'};}
+],
+stats:[
+ lv=>{const what=P([['Number of pets',[0,1,2,3,4]],['Goals scored',[0,1,2,3,4,5]],['Number of siblings',[0,1,2,3,4]]]),xs=what[1],fs=xs.map(()=>R(1,lv===1?8:14)),N=fs.reduce((a,b)=>a+b,0),S=xs.reduce((a,x,i)=>a+x*fs[i],0),ex=S/N,ans=Math.round(ex*10)/10;
+  return {sub:'Averages from tables',text:'The table shows data from a class survey. Work out the mean. Give your answer to 1 decimal place.',img:rtable([[what[0],...xs],['Frequency',...fs]]),ans,tol:.051,show:''+ans.toFixed(1),exp:`Multiply each value by its frequency and add: ${xs.map((x,i)=>`${x}×${fs[i]}`).join(' + ')} = ${S}. Total frequency = ${N}. Mean = ${S} ÷ ${N} = ${ex.toFixed(3)}… ≈ ${ans.toFixed(1)}.`,hint:'Mean = total of (value × frequency) ÷ total frequency.'};},
+ lv=>{const cats=['Football','Netball','Tennis','Swimming','Rugby'].slice(0,lv===1?4:5),step=lv===1?2:5,vals=shuffle(Array.from({length:lv===1?8:6},(_,k)=>step*(k+1))).slice(0,cats.length),i=R(0,cats.length-1);let j;do{j=R(0,cats.length-1);}while(j===i||vals[j]===vals[i]);
+  const img=barSVG(cats,vals,step);
+  if(Math.random()<.5){const hi=vals[i]>vals[j]?i:j,lo=hi===i?j:i;return {sub:'Bar charts',text:`The bar chart shows students’ favourite sports. How many more students chose ${cats[hi]} than ${cats[lo]}?`,img,ans:vals[hi]-vals[lo],show:''+(vals[hi]-vals[lo]),exp:`${cats[hi]}: ${vals[hi]}. ${cats[lo]}: ${vals[lo]}. Difference: ${vals[hi]} − ${vals[lo]} = ${vals[hi]-vals[lo]}.`,hint:'Read each bar against the scale carefully.'};}
+  const tot=vals.reduce((a,b)=>a+b,0);return {sub:'Bar charts',text:'The bar chart shows students’ favourite sports. How many students were asked altogether?',img,ans:tot,show:''+tot,exp:`Add up the bars: ${vals.join(' + ')} = ${tot}.`,hint:'Read every bar, then add them.'};},
+ lv=>{const T=P([12,18,20,24,30,36,40,45,60]),labels=P([['Car','Bus','Walk','Cycle'],['Pizza','Pasta','Curry','Salad'],['Red','Blue','Green','Yellow']]);let fs;do{const c=[R(1,T-1),R(1,T-1),R(1,T-1)].sort((a,b)=>a-b);fs=[c[0],c[1]-c[0],c[2]-c[1],T-c[2]];}while(fs.some(f=>f<1));const i=R(0,3),ang=fs[i]*360/T;
+  return {sub:'Pie charts',text:`The table shows the results of a survey. They are drawn on a pie chart. What angle should the “${labels[i]}” sector be?`,img:rtable([['Answer',...labels],['Frequency',...fs]]),ans:ang,show:ang+'°',exp:`There are ${T} people, so each person gets 360° ÷ ${T} = ${360/T}°. ${labels[i]}: ${fs[i]} × ${360/T}° = ${ang}°.`,hint:'Work out how many degrees one person is worth.'};},
+ lv=>{const N=P([24,36,48,60,120,240]);let angs;do{const c=[R(1,11),R(1,11),R(1,11)].sort((a,b)=>a-b);angs=[c[0],c[1]-c[0],c[2]-c[1],12-c[2]].map(v=>v*30);}while(angs.some(a=>a<30));const labels=['Dogs','Cats','Fish','Rabbits'],i=R(0,3),ans=angs[i]/360*N;
+  return {sub:'Pie charts',text:`${N} people were asked to name their favourite pet. The pie chart shows the results. How many people chose ${labels[i].toLowerCase()}?`,img:pieSVG(labels.map((l,k)=>({label:l,angle:angs[k]}))),ans,show:''+ans,exp:`${labels[i]} has ${angs[i]}° out of 360°. ${angs[i]} ÷ 360 × ${N} = ${ans}.`,hint:'Find the fraction of 360° for that sector, then use it on the total.'};},
+ lv=>{let parts;do{const c=[R(1,19),R(1,19),R(1,19)].sort((a,b)=>a-b);parts=[c[0],c[1]-c[0],c[2]-c[1],20-c[2]];}while(parts.some(p=>p<1));const pr=parts.map(p=>+(p*0.05).toFixed(2)),i=R(0,3),cols=['Red','Blue','Green','Yellow'];
+  return {sub:'Probability',text:'A spinner can land on four colours. The table shows the probabilities. What is the missing probability?',img:rtable([['Colour',...cols],['Probability',...pr.map((p,k)=>k===i?'?':p)]]),ans:pr[i],show:''+pr[i],exp:`Probabilities add up to 1. 1 − ${pr.filter((_,k)=>k!==i).join(' − ')} = ${pr[i]}.`,hint:'All the probabilities must add up to 1.'};},
+ lv=>{const a=R(2,6),b=R(2,6),c=lv===1?0:R(2,5);
+  return {sub:'Counting outcomes',text:`A café offers ${a} starters, ${b} main courses${c?` and ${c} desserts`:''}. How many different meals of one ${c?'starter, one main and one dessert':'starter and one main'} are possible?`,ans:a*b*(c||1),show:''+a*b*(c||1),exp:`Multiply the number of choices: ${a} × ${b}${c?` × ${c}`:''} = ${a*b*(c||1)}.`,hint:'Multiply the number of options for each choice.'};},
+ lv=>{if(Math.random()<.5){const p=R(1,9)/10,q=R(1,9)/10,ans=+(p*q).toFixed(2);return {sub:'The AND rule',text:`The probability that Ali’s bus is late is ${p}. The probability that it rains is ${q}. These events are independent. What is the probability that the bus is late AND it rains?`,ans,show:''+ans,exp:`For independent events, multiply: ${p} × ${q} = ${ans}.`,hint:'AND means multiply.'};}
+  const t=P([['a coin lands on heads and a dice shows 6',1,12,'½ × ⅙ = 1/12'],['two dice both show 6',1,36,'⅙ × ⅙ = 1/36'],['two coins both land on tails',1,4,'½ × ½ = 1/4'],['a dice shows an even number and a coin lands on heads',1,4,'½ × ½ = 1/4']]);
+  return {sub:'The AND rule',text:`What is the probability that ${t[0]}? Type it as a fraction like 1/6.`,ans:t[1]/t[2],show:`${t[1]}/${t[2]}`,exp:`The events are independent, so multiply: ${t[3]}.`,hint:'AND means multiply the probabilities.'};},
+ lv=>{const p=P([0.2,0.3,0.4,0.6,0.7,0.8]),q=+(1-p).toFixed(1),t=P(lv===3?['rr','bb','mix']:['rr','bb']),img=treeSVG(p);
+  if(t==='rr'){const a=+(p*p).toFixed(2);return {sub:'Tree diagrams',text:'A counter is taken from a bag and put back, then a second counter is taken. What is the probability that both counters are red?',img,ans:a,show:''+a,exp:`Follow the red then red branches and multiply: ${p} × ${p} = ${a}.`,hint:'Multiply along the branches.'};}
+  if(t==='bb'){const a=+(q*q).toFixed(2);return {sub:'Tree diagrams',text:'A counter is taken from a bag and put back, then a second counter is taken. What is the probability that both counters are blue?',img,ans:a,show:''+a,exp:`Follow the blue then blue branches and multiply: ${q} × ${q} = ${a}.`,hint:'Multiply along the branches.'};}
+  const a=+(2*p*q).toFixed(2);return {sub:'Tree diagrams',text:'A counter is taken from a bag and put back, then a second counter is taken. What is the probability of getting one red and one blue (in either order)?',img,ans:a,show:''+a,exp:`Red then blue: ${p} × ${q} = ${+(p*q).toFixed(2)}. Blue then red: ${q} × ${p} = ${+(p*q).toFixed(2)}. Add them: ${a}.`,hint:'Multiply along each branch that works, then add.'};},
+ lv=>{const T=R(3,11),ways=6-Math.abs(T-7),g=gcd(ways,36),list=[];for(let a=1;a<=6;a++){const b=T-a;if(b>=1&&b<=6)list.push(`${a}+${b}`);}
+  if(lv===1||Math.random()<.5)return {sub:'Sample spaces',text:`Two fair dice are rolled and the scores are added. How many of the 36 possible outcomes give a total of ${T}?`,ans:ways,show:''+ways,exp:`The ways are ${list.join(', ')}. That is ${ways}.`,hint:'List every pair, counting 2+5 and 5+2 separately.'};
+  return {sub:'Sample spaces',text:`Two fair dice are rolled and the scores are added. What is the probability of a total of ${T}? Type it as a fraction.`,ans:ways/36,show:g>1?`${ways/g}/${36/g}`:`${ways}/36`,exp:`There are ${ways} ways (${list.join(', ')}) out of 36, so the probability is ${ways}/36${g>1?` = ${ways/g}/${36/g}`:''}.`,hint:'Count the ways, then divide by 36.'};},
+ lv=>{const n=6,arr=Array.from({length:n},()=>R(1,40)),s=[...arr].sort((a,b)=>a-b),med=(s[2]+s[3])/2;
+  return {sub:'Averages',text:`Find the median of: ${arr.join(', ')}`,ans:med,show:''+med,exp:`In order: ${s.join(', ')}. There are two middle values, ${s[2]} and ${s[3]}. The median is halfway between them: ${med}.`,hint:'With an even number of values, the median is halfway between the middle two.'};}
+]
+};
+for(const t in GUIDE)GEN[t].push(...GUIDE[t]);
+
+function makeQ(topic,lv){const q=P(GEN[topic])(lv);q.topic=topic;return q;}
+function parseAns(s){s=String(s).replace(/[−–—]/g,'-').replace(/[²³]/g,'').replace(/[^0-9.\-\/]/g,'').replace(/^\/+|\/+$/g,'');if(!s)return NaN;if(s.includes('/')){const [a,b]=s.split('/');const x=parseFloat(a),y=parseFloat(b);return y?x/y:NaN;}return parseFloat(s);}
+function checkAns(q,raw){if(q.ratio){return String(raw).replace(/\s/g,'')===q.ratio.join(':');}if(q.exact){const s=String(raw).replace(/\s/g,'');return s===`${q.exact[0]}/${q.exact[1]}`;}const v=parseAns(raw);return Number.isFinite(v)&&Math.abs(v-q.ans)<=(q.tol??1e-6);}
+
+/* ---------------- State ---------------- */
+const SAVE='numeria-quest-v1';
+let rollMsg='',lucky=false,lastRoll=0;
+let S=null,busy=false,ctrlMode='idle',dice=[1,1],qid=0,activeTimer=null;
+function freshState(name,cls,diff){const c=CLASSES[cls];return {v:1,hero:{name,cls,lv:1,xp:0,hp:c.hp,maxHp:c.hp,gold:20,items:{...c.start}},pos:0,cleared:[false,false,false,false,false,false],opened:{},diff,ng:0,streak:0,best:0,blitzBest:0,chests:0,wins:0,stats:Object.fromEntries(TOPICS.map(t=>[t,{c:0,a:0}])),ach:{},log:[],won:false,luck:true,stars:{},scores:{},bounties:[],bountiesDone:0,secrets:{},cheats:{},cheatUses:0,sixRun:0};}
+function save(){try{localStorage.setItem(SAVE,JSON.stringify(S));}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem(SAVE)||'null');if(s&&s.v===1&&s.hero)return upgrade(s);}catch(e){}return null;}
+function upgrade(s){s.stars=s.stars||{};s.scores=s.scores||{};s.bounties=s.bounties||[];s.bountiesDone=s.bountiesDone||0;s.secrets=s.secrets||{};s.cheats=s.cheats||{};s.cheatUses=s.cheatUses||0;s.sixRun=s.sixRun||0;if(s.luck===undefined)s.luck=true;if(s.hero&&!s.hero.av)s.hero.av={type:'initial',bg:CLASSES[s.hero.cls].color,skin:SKINS[1]};return s;}
+const regionOf=i=>i>=42?6:Math.floor(i/7);
+const tileType=i=>i===42?'F':i%7===6?'G':PATTERNS[Math.floor(i/7)][i%7];
+const xpNeed=lv=>20+(lv-1)*15;
+const heroDmg=()=>CLASSES[S.hero.cls].dmg+Math.floor((S.hero.lv-1)/2);
+const combo=()=>S.streak>=6?2:S.streak>=3?1:0;
+function pickLv(kind){const d=S.diff;let lv;if(d==='gentle')lv=kind==='battle'?1:2;else if(d==='exam')lv=kind==='battle'?P([2,3]):3;else lv=kind==='battle'?P([1,1,2]):P([2,3]);return Math.min(3,lv+(S.ng||0));}
+function topicFor(kind){const r=regionOf(S.pos);if(kind==='final'||r>5)return P(TOPICS);if(kind==='boss')return TOPICS[r];if(r>0&&Math.random()<.25)return P(TOPICS.slice(0,r));return TOPICS[r];}
+function addLog(t){S.log.unshift(t);S.log=S.log.slice(0,8);}
+function grant(id){if(S.ach[id])return;S.ach[id]=true;toast('Achievement unlocked',ACH[id][0]+' · '+ACH[id][1]);}
+function addXP(n){const h=S.hero;h.xp+=n;while(h.xp>=xpNeed(h.lv)){h.xp-=xpNeed(h.lv);h.lv++;h.maxHp+=3;h.hp=h.maxHp;toast('Level up!',`You reached level ${h.lv}. Max HP +3 and fully healed.`);addLog(`Reached level ${h.lv}.`);if(h.lv>=5)grant('lv5');}}
+function record(q,ok){const st=S.stats[q.topic];st.a++;if(ok){st.c++;if(q.ans===42)secret('answer42');S.streak++;S.best=Math.max(S.best,S.streak);addXP(3);if(S.streak>=5)grant('streak5');if(S.streak>=10)grant('streak10');bump('topic',1,q.topic);bump('combo',S.streak,null,true);}else S.streak=0;
+ const tot=TOPICS.reduce((s,t)=>s+S.stats[t].a,0),cor=TOPICS.reduce((s,t)=>s+S.stats[t].c,0);if(tot>=50&&cor/tot>=.8)grant('sharp');save();renderHUD();renderSheet();}
+function hurtHero(n){if(S.cheats&&S.cheats.god)return {blocked:true,god:true};if(S.hero.items.shield>0){S.hero.items.shield--;return {blocked:true};}S.hero.hp=Math.max(0,S.hero.hp-n);return {blocked:false,n};}
+
+/* ---------------- Drawing helpers ---------------- */
+function glyph(t){switch(t){
+ case 'C':return '<path d="M-11 9 L0 -10 L11 9 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/><path d="M-3 9 L0 2 L3 9 Z" fill="var(--ink)"/>';
+ case 'B':return '<path d="M-9 -9 L9 9 M9 -9 L-9 9" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round"/><path d="M-11 5 L-5 11 M11 5 L5 11" stroke="var(--coral)" stroke-width="3.5" stroke-linecap="round"/>';
+ case 'T':return '<rect x="-11" y="-6" width="22" height="15" rx="2" fill="var(--gold)" stroke="var(--ink)" stroke-width="2.5"/><path d="M-11 -1 H11" stroke="var(--ink)" stroke-width="2.5"/><rect x="-2.5" y="-3" width="5" height="6" fill="var(--ink)"/>';
+ case 'X':return '<path d="M3 -12 L-8 2 L-1 2 L-4 12 L8 -3 L1 -3 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>';
+ case 'R':return '<path d="M-12 9 L-8 -7 L-4 9 L0 -7 L4 9 L8 -7 L12 9 Z" fill="var(--coral)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>';
+ case 'Q':return '<rect x="-9" y="-11" width="18" height="22" rx="3" fill="#fff6dd" stroke="var(--ink)" stroke-width="2.5"/><path d="M-4 -5 H4 M-4 0 H4 M-4 5 H1" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"/>';
+ case 'G':case 'F':return '<path d="M-12 8 L-12 -6 L-6 0 L0 -10 L6 0 L12 -6 L12 8 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>';
+}return '';}
+function itemIcon(k){if(k==='potion')return '<svg viewBox="-16 -16 32 32" aria-hidden="true"><path d="M-4 -12 H4 V-5 L10 4 A9 9 0 0 1 2 13 H-2 A9 9 0 0 1 -10 4 L-4 -5 Z" fill="var(--coral)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/><rect x="-5" y="-15" width="10" height="4" rx="1" fill="var(--ink)"/></svg>';
+ if(k==='scroll')return '<svg viewBox="-16 -16 32 32" aria-hidden="true"><rect x="-10" y="-12" width="20" height="24" rx="3" fill="#fff6dd" stroke="var(--ink)" stroke-width="2.5"/><path d="M-5 -5 H5 M-5 0 H5 M-5 5 H2" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"/></svg>';
+ return '<svg viewBox="-16 -16 32 32" aria-hidden="true"><path d="M0 -13 L11 -8 V1 C11 8 5 12 0 14 C-5 12 -11 8 -11 1 V-8 Z" fill="var(--sky)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/><path d="M0 -8 V9" stroke="#fff" stroke-width="2.5"/></svg>';}
+function monsterSVG(color,seed,crown){const v=seed%3,ink='var(--ink)';
+ const body=v===0?'M18 98 Q8 44 60 32 Q112 44 102 98 Q82 108 60 100 Q38 108 18 98 Z':v===1?'M30 104 L30 58 Q30 26 60 26 Q90 26 90 58 L90 104 L80 94 L70 104 L60 94 L50 104 L40 94 Z':'M16 96 L26 54 L18 38 L40 44 L60 26 L80 44 L102 38 L94 54 L104 96 Q60 110 16 96 Z';
+ const top=v===2?22:v===1?24:30;
+ return `<svg viewBox="0 0 120 120" class="mon" aria-hidden="true"><ellipse cx="60" cy="108" rx="40" ry="6" fill="${ink}" opacity=".18"/><path d="${body}" fill="${color}" stroke="${ink}" stroke-width="3.5" stroke-linejoin="round"/>
+ <circle cx="46" cy="62" r="10" fill="#fff" stroke="${ink}" stroke-width="3"/><circle cx="74" cy="62" r="10" fill="#fff" stroke="${ink}" stroke-width="3"/><circle cx="${48+(seed%3)}" cy="64" r="4.5" fill="${ink}"/><circle cx="${76+(seed%3)}" cy="64" r="4.5" fill="${ink}"/>
+ <path d="M42 50 L54 55 M78 50 L66 55" stroke="${ink}" stroke-width="3.5" stroke-linecap="round"/>
+ <path d="M44 82 Q60 ${seed%2?92:76} 76 82" stroke="${ink}" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M50 83 L53 89 L56 84 M64 84 L67 89 L70 83" fill="#fff" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/>
+ ${crown?`<path d="M38 ${top} L38 ${top-18} L49 ${top-8} L60 ${top-24} L71 ${top-8} L82 ${top-18} L82 ${top} Z" fill="var(--gold)" stroke="${ink}" stroke-width="3" stroke-linejoin="round"/>`:''}</svg>`;}
+function chestSVG(){return '<svg viewBox="0 0 120 100" class="mon" aria-hidden="true"><ellipse cx="60" cy="92" rx="44" ry="6" fill="var(--ink)" opacity=".18"/><path d="M16 44 Q16 18 60 18 Q104 18 104 44 Z" fill="var(--gold)" stroke="var(--ink)" stroke-width="3.5" stroke-linejoin="round"/><rect x="16" y="44" width="88" height="44" rx="4" fill="var(--gold)" stroke="var(--ink)" stroke-width="3.5"/><path d="M44 18 V88 M76 18 V88" stroke="var(--ink)" stroke-width="3"/><rect x="50" y="38" width="20" height="22" rx="3" fill="var(--ink)"/><circle cx="60" cy="47" r="3.5" fill="var(--gold)"/><path d="M60 50 V55" stroke="var(--gold)" stroke-width="3"/></svg>';}
+/* ---------------- Avatars ---------------- */
+const AV_TYPES=[['initial','Letter'],['knight','Knight'],['wizard','Wizard'],['archer','Archer'],['pirate','Pirate'],['ninja','Ninja'],['astronaut','Astronaut'],['robot','Robot'],['cat','Cat'],['fox','Fox'],['owl','Owl'],['dragon','Dragon']];
+const HUMAN=new Set(['knight','wizard','archer','pirate','ninja','astronaut']);
+const AV_BG=['#3a8fd6','#7d68d0','#14806f','#e2533c','#f3b229','#cf5b86','#2b3d57','#6fb43f'];
+const SKINS=['#f6d7b8','#e8b48a','#c68a5b','#8d5a3b','#5c3a24'];
+const K='#17263a';
+function avFace(sk){return `<circle cx="50" cy="58" r="23" fill="${sk}" stroke="${K}" stroke-width="3"/><circle cx="42" cy="58" r="3.2" fill="${K}"/><circle cx="58" cy="58" r="3.2" fill="${K}"/><circle cx="36" cy="66" r="3.5" fill="#e86a6a" opacity=".35"/><circle cx="64" cy="66" r="3.5" fill="#e86a6a" opacity=".35"/><path d="M43 68 Q50 74 57 68" stroke="${K}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;}
+function avatarInner(av,letter){const sk=av.skin||'#e8b48a';switch(av.type){
+ case 'knight':return avFace(sk)+`<path d="M24 60 Q24 28 50 28 Q76 28 76 60 L69 60 L69 47 L31 47 L31 60 Z" fill="#c9d3dd" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><path d="M50 28 V47" stroke="${K}" stroke-width="2.5"/><path d="M50 28 Q54 10 70 10 Q62 18 58 30" fill="#e2533c" stroke="${K}" stroke-width="2.5" stroke-linejoin="round"/>`;
+ case 'wizard':return avFace(sk)+`<ellipse cx="50" cy="40" rx="31" ry="7" fill="#5b45b8" stroke="${K}" stroke-width="3"/><path d="M31 39 L54 4 L69 39 Z" fill="#7d68d0" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><path d="M51 20 l2 4 4.5 .6 -3.3 3 .8 4.4 -4 -2.2 -4 2.2 .8 -4.4 -3.3 -3 4.5 -.6z" fill="#f3b229"/>`;
+ case 'archer':return `<path d="M18 96 Q14 30 50 24 Q86 30 82 96 Z" fill="#14806f" stroke="${K}" stroke-width="3" stroke-linejoin="round"/>`+avFace(sk)+`<path d="M27 58 Q28 36 50 35 Q72 36 73 58 Q68 45 50 43 Q32 45 27 58 Z" fill="#0f6a5c"/><path d="M72 30 Q86 18 88 6 Q78 14 70 26 Z" fill="#f3b229" stroke="${K}" stroke-width="2" stroke-linejoin="round"/>`;
+ case 'pirate':return avFace(sk)+`<path d="M26 54 Q26 30 50 30 Q74 30 74 54 Z" fill="#e2533c" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><circle cx="40" cy="41" r="2.5" fill="#fff"/><circle cx="58" cy="39" r="2.5" fill="#fff"/><circle cx="49" cy="47" r="2" fill="#fff"/><path d="M73 47 L87 42 L85 57 Z" fill="#e2533c" stroke="${K}" stroke-width="2.5" stroke-linejoin="round"/><path d="M28 52 L70 61" stroke="${K}" stroke-width="2"/><circle cx="42" cy="58" r="6.5" fill="${K}"/>`;
+ case 'ninja':return `<circle cx="50" cy="56" r="25" fill="#2b2f3a" stroke="${K}" stroke-width="3"/><rect x="30" y="50" width="40" height="15" rx="7.5" fill="${sk}"/><circle cx="42" cy="57.5" r="3.2" fill="${K}"/><circle cx="58" cy="57.5" r="3.2" fill="${K}"/><path d="M26 43 H74" stroke="#e2533c" stroke-width="5"/><path d="M73 43 Q86 39 90 47 M73 45 Q84 49 86 57" stroke="#e2533c" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+ case 'astronaut':return `<circle cx="50" cy="56" r="33" fill="#eef2f6" stroke="${K}" stroke-width="3"/><circle cx="50" cy="56" r="25" fill="#1d2b40" stroke="${K}" stroke-width="2.5"/><g transform="translate(7.5 6.6) scale(.85)">${avFace(sk)}</g><path d="M33 46 Q38 36 49 34" stroke="#fff" stroke-width="3.5" fill="none" opacity=".7" stroke-linecap="round"/><rect x="43" y="17" width="14" height="6" rx="2" fill="#e2533c" stroke="${K}" stroke-width="2"/>`;
+ case 'robot':return `<path d="M50 24 V13" stroke="${K}" stroke-width="3"/><circle cx="50" cy="10" r="4.5" fill="#e2533c" stroke="${K}" stroke-width="2.5"/><rect x="18" y="42" width="8" height="16" rx="2" fill="#9aa3ad" stroke="${K}" stroke-width="2.5"/><rect x="74" y="42" width="8" height="16" rx="2" fill="#9aa3ad" stroke="${K}" stroke-width="2.5"/><rect x="24" y="24" width="52" height="52" rx="10" fill="#c3ccd5" stroke="${K}" stroke-width="3"/><rect x="31" y="36" width="38" height="17" rx="6" fill="${K}"/><circle cx="41" cy="44.5" r="4" fill="#5ee0e0"/><circle cx="59" cy="44.5" r="4" fill="#5ee0e0"/><rect x="37" y="59" width="26" height="9" rx="2" fill="#fff" stroke="${K}" stroke-width="2.5"/><path d="M43.5 59 V68 M50 59 V68 M56.5 59 V68" stroke="${K}" stroke-width="2"/>`;
+ case 'cat':return `<path d="M28 44 L26 18 L46 34 Z M72 44 L74 18 L54 34 Z" fill="#f3a64a" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><path d="M31 38 L30 26 L40 34 Z M69 38 L70 26 L60 34 Z" fill="#f7c6c6"/><circle cx="50" cy="57" r="25" fill="#f3a64a" stroke="${K}" stroke-width="3"/><path d="M41 37 L43 44 M50 34 V42 M59 37 L57 44" stroke="#c97a2a" stroke-width="3" stroke-linecap="round"/><circle cx="41" cy="55" r="3.5" fill="${K}"/><circle cx="59" cy="55" r="3.5" fill="${K}"/><path d="M47 62 L53 62 L50 66 Z" fill="#e86a8a" stroke="${K}" stroke-width="1.5" stroke-linejoin="round"/><path d="M50 66 Q46 71 42 68 M50 66 Q54 71 58 68" stroke="${K}" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M33 62 H18 M33 66 L19 71 M67 62 H82 M67 66 L81 71" stroke="${K}" stroke-width="1.8" stroke-linecap="round"/>`;
+ case 'fox':{const head='M24 44 Q26 30 50 30 Q74 30 76 44 Q78 62 50 82 Q22 62 24 44 Z';return `<path d="M26 46 L22 14 L46 32 Z M74 46 L78 14 L54 32 Z" fill="#e2733c" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><path d="M23.5 21 L22 14 L29 19 Z M76.5 21 L78 14 L71 19 Z" fill="${K}"/><path d="${head}" fill="#e2733c"/><path d="M25 50 Q40 52 50 66 Q60 52 75 50 Q72 66 50 82 Q28 66 25 50 Z" fill="#fff4ea"/><path d="${head}" fill="none" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><circle cx="40" cy="50" r="3.3" fill="${K}"/><circle cx="60" cy="50" r="3.3" fill="${K}"/><ellipse cx="50" cy="75" rx="4.5" ry="3.5" fill="${K}"/>`;}
+ case 'owl':return `<path d="M30 30 L26 16 L40 26 Z M70 30 L74 16 L60 26 Z" fill="#8b6b4a" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><ellipse cx="50" cy="57" rx="28" ry="30" fill="#8b6b4a" stroke="${K}" stroke-width="3"/><ellipse cx="50" cy="70" rx="16" ry="13" fill="#d9c09a"/><path d="M42 66 l3 3 3 -3 M52 66 l3 3 3 -3 M47 73 l3 3 3 -3" stroke="#a88a62" stroke-width="2" fill="none"/><circle cx="39" cy="46" r="11" fill="#fff" stroke="${K}" stroke-width="3"/><circle cx="61" cy="46" r="11" fill="#fff" stroke="${K}" stroke-width="3"/><circle cx="40" cy="47" r="5" fill="${K}"/><circle cx="60" cy="47" r="5" fill="${K}"/><circle cx="42" cy="45" r="1.6" fill="#fff"/><circle cx="62" cy="45" r="1.6" fill="#fff"/><path d="M46 56 L54 56 L50 64 Z" fill="#f3b229" stroke="${K}" stroke-width="2" stroke-linejoin="round"/>`;
+ case 'dragon':return `<path d="M32 34 L22 12 L40 28 Z M68 34 L78 12 L60 28 Z" fill="#f3e3b0" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><path d="M50 21 L43 32 H57 Z" fill="#2f9d6a" stroke="${K}" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 54 Q24 28 50 28 Q76 28 76 54 Q76 66 70 70 Q60 82 50 82 Q40 82 30 70 Q24 66 24 54 Z" fill="#6fb43f" stroke="${K}" stroke-width="3" stroke-linejoin="round"/><ellipse cx="50" cy="70" rx="17" ry="10" fill="#a9d27c"/><circle cx="44" cy="68" r="2" fill="${K}"/><circle cx="56" cy="68" r="2" fill="${K}"/><circle cx="39" cy="50" r="5.5" fill="#fff" stroke="${K}" stroke-width="2.5"/><circle cx="61" cy="50" r="5.5" fill="#fff" stroke="${K}" stroke-width="2.5"/><circle cx="40" cy="51" r="2.6" fill="${K}"/><circle cx="62" cy="51" r="2.6" fill="${K}"/>`;
+ default:return `<text x="50" y="66" text-anchor="middle" fill="#fff" style="font:44px var(--f-display);paint-order:stroke;stroke:${K};stroke-width:6px;stroke-linejoin:round">${letter}</text>`;}}
+const avatarSVG=(av,letter)=>`<svg viewBox="0 0 100 100" aria-hidden="true">${avatarInner(av,letter)}</svg>`;
+function heroAv(){const h=S.hero;return h.av||{type:'initial',bg:CLASSES[h.cls].color,skin:SKINS[1]};}
+const heroLetter=()=>esc((S.hero.name.trim()[0]||'H').toUpperCase());
+function avatar(big){const a=heroAv();return `<div class="avatar${big?' big':''}" style="--c:${a.bg}">${avatarSVG(a,heroLetter())}</div>`;}
+function mountPicker(el,av,getLetter){const draw=focus=>{const L=getLetter();
+  el.innerHTML=`<div class="picker"><div class="pick-preview"><div class="avatar big" style="--c:${av.bg}">${avatarSVG(av,L)}</div></div><div>
+  <div class="pick-grid" role="group" aria-label="Character">${AV_TYPES.map(([k,n])=>`<button type="button" class="pick" data-av="${k}" aria-pressed="${av.type===k}"><span class="avatar" style="--c:${av.bg}">${avatarSVG({...av,type:k},L)}</span>${n}</button>`).join('')}</div>
+  <div class="sw-label">Colour</div><div class="swatches" role="group" aria-label="Background colour">${AV_BG.map((c,i)=>`<button type="button" class="sw" data-bg="${c}" style="--c:${c}" aria-pressed="${av.bg===c}" aria-label="Colour ${i+1}"></button>`).join('')}</div>
+  ${HUMAN.has(av.type)?`<div class="sw-label">Skin tone</div><div class="swatches" role="group" aria-label="Skin tone">${SKINS.map((c,i)=>`<button type="button" class="sw" data-skin="${c}" style="--c:${c}" aria-pressed="${av.skin===c}" aria-label="Skin tone ${i+1}"></button>`).join('')}</div>`:''}</div></div>`;
+  el.querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>{av.type=b.dataset.av;draw(`[data-av="${av.type}"]`);});
+  el.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{av.bg=b.dataset.bg;draw(`[data-bg="${av.bg}"]`);});
+  el.querySelectorAll('[data-skin]').forEach(b=>b.onclick=()=>{av.skin=b.dataset.skin;draw(`[data-skin="${av.skin}"]`);});
+  if(focus){const f=el.querySelector(focus);if(f)f.focus();}};draw();return draw;}
+function openLook(){closeDrawer();const av={...heroAv()};
+ openDialog(head('Wardrobe','Change your look',true)+'<div id="pickerBox"></div><div class="row"><button class="btn primary" id="saveLook" type="button">Save look</button><button class="btn" id="done" type="button">Cancel</button></div>');
+ mountPicker($('pickerBox'),av,heroLetter);$('saveLook').onclick=()=>{S.hero.av={...av};addLog('Changed outfit.');save();closeDialog();toast('Looking good!','Your new look is saved.');};$('done').onclick=closeDialog;}
+function tileXY(i){if(i===42)return {x:380,y:684};const r=Math.floor(i/7),c=i%7,col=r%2===0?c:6-c;return {x:70+col*103.33,y:70+r*100};}
+function renderDie(el,n){const on={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]}[n];el.innerHTML=Array.from({length:9},(_,i)=>`<span class="${on.includes(i)?'on':''}"></span>`).join('');el.setAttribute('aria-label','Die showing '+n);}
+
+/* ---------------- Rendering ---------------- */
+function renderHUD(){const h=S.hero;$('hud').innerHTML=`
+ <div class="stat lvl" title="Level">Lv ${h.lv}</div>
+ <div class="stat"><span class="lbl">HP</span><div class="bar"><i style="width:${100*h.hp/h.maxHp}%"></i></div><span class="num">${h.hp}/${h.maxHp}</span></div>
+ <div class="stat"><span class="lbl">XP</span><div class="bar xp"><i style="width:${100*h.xp/xpNeed(h.lv)}%"></i></div><span class="num">${h.xp}/${xpNeed(h.lv)}</span></div>
+ <div class="stat"><span class="lbl">Gold</span><span class="num">${h.gold}</span></div>
+ <div class="stat"><span class="lbl">Combo</span><span class="num">${S.streak}</span></div>`;
+ $('starCount').textContent=totalStars()+'★';$('hallDot').hidden=!(S.bounties||[]).some(b=>b.done);if(cheatsOn())$('hud').insertAdjacentHTML('beforeend','<div class="stat cheat" title="Cheat codes are active">Cheats on</div>');}
+/* ---------------- Illustrated map ---------------- */
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const TERR=[
+ {base:'#a9d27c',alt:'#c2df8e',leaf:['#5e9f45','#457f34','#86bf5c'],rock:['#a19c94','#857f78'],decos:[['tree',3],['bush',3],['grass',6],['flower',5]],tries:260},
+ {base:'#5f9a55',alt:'#4c8546',leaf:['#3f7d3a','#2c5f2b','#5c9a48'],rock:['#8e8a80','#716d65'],decos:[['tree',6],['pine',7],['bush',2],['grass',1]],tries:380},
+ {base:'#8b8396',alt:'#6f6780',leaf:['#4f7a4a','#3a5d37','#6d9a5c'],rock:['#9d93a8','#746a80'],decos:[['rock',5],['stal',5],['crystal',4]],tries:300},
+ {base:'#9ccb85',alt:'#b4d99a',leaf:['#55963f','#3d7a31','#7cb85a'],rock:['#a19c94','#857f78'],decos:[['reed',5],['tree',3],['grass',4],['rock',1]],tries:240},
+ {base:'#bdad92',alt:'#a8977c',leaf:['#3f7343','#2c5532','#5a8d55'],rock:['#a39888','#7e7468'],decos:[['mount',7],['rock',3],['pine',2]],tries:300},
+ {base:'#d2c2ad',alt:'#bfae98',leaf:['#5b9447','#447536','#7fb35f'],rock:['#a6a097','#88827a'],decos:[['house',5],['tower',2],['tree',3],['banner',1]],tries:260},
+ {base:'#5d5668',alt:'#4a4454',leaf:['#4a4f3e','#353a2c','#5e6550'],rock:['#77707f','#5a5363'],decos:[['rock',4],['snag',4],['stal',2]],tries:160}
+];
+const DSIZE={tree:[20,27],pine:[20,28],bush:[18,11],grass:[12,8],flower:[11,8],rock:[18,10],stal:[10,18],crystal:[16,17],reed:[12,16],mount:[44,34],house:[18,18],tower:[14,36],banner:[10,20],snag:[14,18]};
+function decoSVG(t,x,y,s,T,rn){const g=inner=>`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(2)})">${inner}</g>`,sh=rx=>`<ellipse cx="2" cy="0" rx="${rx}" ry="${(rx*.3).toFixed(1)}" fill="#14121c" opacity=".26"/>`,[L,D,H]=T.leaf,[R0,R1]=T.rock;
+ switch(t){
+ case 'tree':return g(sh(9)+`<rect x="-1.6" y="-10" width="3.2" height="10" fill="#6b4a2e"/><circle cx="0" cy="-17" r="8.5" fill="${D}"/><circle cx="-4.5" cy="-13" r="5.8" fill="${L}"/><circle cx="4" cy="-12.5" r="5.8" fill="${D}"/><circle cx="-2.5" cy="-20" r="4.2" fill="${H}"/>`);
+ case 'pine':return g(sh(8)+`<rect x="-1.5" y="-4" width="3" height="4" fill="#5a3d26"/><path d="M0 -28 L8 -15 L4 -15 L10 -3 L-10 -3 L-4 -15 L-8 -15 Z" fill="${D}"/><path d="M0 -28 L-8 -15 L-4 -15 L-10 -3 L0 -3 Z" fill="${L}"/>`);
+ case 'bush':return g(sh(9)+`<circle cx="-4" cy="-4.5" r="5" fill="${D}"/><circle cx="3.5" cy="-4.5" r="5.5" fill="${L}"/><circle cx="0" cy="-7.5" r="4" fill="${H}"/>`);
+ case 'grass':return g(`<path d="M-5 0 L-7 -6 M-2 0 L-2 -8 M1 0 L3 -7 M4 0 L7 -5" stroke="${D}" stroke-width="1.4" stroke-linecap="round" fill="none"/>`);
+ case 'flower':{const c=['#f6d04d','#ffffff','#e86a8a','#c58bf0'][Math.floor(rn()*4)];return g(`<path d="M-3 0 L-4 -5 M0 0 L0 -6 M3 0 L4 -5" stroke="${D}" stroke-width="1.2" fill="none"/><circle cx="-4" cy="-6" r="1.9" fill="${c}"/><circle cx="0" cy="-7.2" r="1.9" fill="${c}"/><circle cx="4" cy="-6" r="1.9" fill="${c}"/>`);}
+ case 'rock':return g(sh(9)+`<path d="M-9 0 L-7 -6 L-1 -10 L6 -8 L9 0 Z" fill="${R0}"/><path d="M-1 -10 L6 -8 L9 0 L2 0 Z" fill="${R1}"/>`);
+ case 'stal':return g(sh(6)+`<path d="M-5 0 L-1 -18 L1 -18 L5 0 Z" fill="${R0}"/><path d="M0 -18 L1 -18 L5 0 L1 0 Z" fill="${R1}"/>`);
+ case 'crystal':return g(sh(8)+`<path d="M-7 0 L-8 -8 L-5 -14 L-2 -6 L-1 0 Z" fill="#a78bea"/><path d="M-2 0 L0 -17 L3 -12 L4 0 Z" fill="#cdb8ff"/><path d="M2 0 L5 -9 L8 -6 L7 0 Z" fill="#8a6fd1"/><path d="M0 -15 L1 -5" stroke="#fff" stroke-width="1" opacity=".85"/>`);
+ case 'reed':return g(`<path d="M-3 0 Q-4 -8 -6 -14 M0 0 L0 -16 M3 0 Q4 -8 6 -12" stroke="#5f7d3a" stroke-width="1.4" fill="none"/><rect x="-1.4" y="-15" width="2.8" height="6" rx="1.4" fill="#6b4a2e"/>`);
+ case 'mount':return g(sh(20)+`<path d="M-22 0 L-2 -34 L2 -34 L22 0 Z" fill="${R0}"/><path d="M0 -34 L2 -34 L22 0 L5 0 Z" fill="${R1}"/><path d="M-2 -34 L2 -34 L8 -24 L4 -26 L1 -22 L-2 -26 L-7 -23 Z" fill="#f7f8fa"/>`);
+ case 'house':return g(sh(10)+`<rect x="-7" y="-10" width="14" height="10" fill="#efe6d6" stroke="#5a4636" stroke-width="1"/><rect x="0" y="-10" width="7" height="10" fill="#d9cdb9"/><path d="M-9 -10 L0 -18 L9 -10 Z" fill="#b5523b" stroke="#5a4636" stroke-width="1"/><rect x="-2" y="-6" width="4" height="6" fill="#5a4636"/>`);
+ case 'tower':return g(sh(8)+`<rect x="-5" y="-26" width="10" height="26" fill="#d8d1c4" stroke="#5a4e48" stroke-width="1"/><rect x="0" y="-26" width="5" height="26" fill="#bdb5a7"/><path d="M-6 -26 L0 -36 L6 -26 Z" fill="#8a3b62" stroke="#5a4e48" stroke-width="1"/><rect x="-1.5" y="-19" width="3" height="5" fill="#3d3440"/>`);
+ case 'banner':return g(`<path d="M0 0 V-20" stroke="#4a3b30" stroke-width="1.6"/><path d="M0 -20 L10 -17 L0 -13 Z" fill="#cf5b86"/>`);
+ case 'snag':return g(sh(7)+`<path d="M0 0 V-14 M0 -8 L-6 -14 M0 -11 L5 -17 M-3 -11 L-5 -17" stroke="#26212c" stroke-width="2" stroke-linecap="round" fill="none"/>`);
+ }return '';}
+function castleSVG(){const st='#9a94a6',sd='#7a7487',rf='#7a2f3a',ink='#1f1a26';let cren='';for(let x=304;x<456;x+=16)cren+=`<rect x="${x}" y="645" width="9" height="8" fill="${st}" stroke="${ink}" stroke-width="1.5"/>`;
+ const tower=tx=>`<rect x="${tx-14}" y="612" width="28" height="96" fill="${st}" stroke="${ink}" stroke-width="2"/><rect x="${tx}" y="613" width="13" height="94" fill="${sd}"/><path d="M${tx-18} 614 L${tx} 582 L${tx+18} 614 Z" fill="${rf}" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/><path d="M${tx} 582 V568" stroke="${ink}" stroke-width="1.6"/><path d="M${tx} 568 L${tx+12} 572 L${tx} 576 Z" fill="var(--gold)"/><rect x="${tx-3}" y="636" width="6" height="11" rx="3" fill="${ink}"/><rect x="${tx-3}" y="668" width="6" height="11" rx="3" fill="${ink}"/>`;
+ return `<ellipse cx="380" cy="712" rx="128" ry="11" fill="#000" opacity=".3"/><rect x="345" y="616" width="70" height="40" fill="${st}" stroke="${ink}" stroke-width="2"/><path d="M338 618 L380 590 L422 618 Z" fill="${rf}" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/>
+ <rect x="300" y="652" width="160" height="56" fill="${st}" stroke="${ink}" stroke-width="2"/><rect x="380" y="653" width="79" height="54" fill="${sd}" opacity=".55"/>${cren}${tower(296)}${tower(464)}`;}
+const MAP_CHROME=`<g id="plate" style="cursor:pointer" transform="translate(22 700)"><rect width="200" height="40" rx="6" fill="#fbf8f1" stroke="#17263a" stroke-width="2"/><rect x="4" y="4" width="192" height="32" rx="4" fill="none" stroke="#17263a" stroke-opacity=".35"/><text x="100" y="19" text-anchor="middle" fill="#17263a" style="font:11px var(--f-display);letter-spacing:.06em">KINGDOM OF NUMERIA</text><text x="100" y="32" text-anchor="middle" fill="#4f6276" style="font:700 10px var(--f-body)">Founded in the year π</text></g>
+ <g id="compass" style="cursor:pointer" transform="translate(704 700)"><circle r="25" fill="#fbf8f1" fill-opacity=".9" stroke="#17263a" stroke-width="2"/><circle r="19" fill="none" stroke="#17263a" stroke-opacity=".3"/><path d="M-20 0 L0 -4 L20 0 L0 4 Z" fill="#17263a" opacity=".5"/><path d="M0 -21 L4.5 0 L0 21 L-4.5 0 Z" fill="#17263a"/><path d="M0 -21 L4.5 0 L-4.5 0 Z" fill="#e2533c"/><text y="-30" text-anchor="middle" fill="#f4f1ea" style="font:900 11px var(--f-body)">N</text></g>`;
+let TERRAIN_SVG=null;
+function buildTerrain(){const rn=mulberry(61106),pts=Array.from({length:43},(_,i)=>tileXY(i)),decos=[];let out='';
+ let bands='';for(let r=0;r<7;r++){const T=TERR[r],y0=r===0?-30:r*100+18,y1=r===6?790:r*100+118;bands+=`<rect x="-30" y="${y0}" width="820" height="${y1-y0}" fill="${T.base}"/>`;
+  for(let k=0;k<7;k++)bands+=`<ellipse cx="${(rn()*760).toFixed(0)}" cy="${(y0+20+rn()*(y1-y0-40)).toFixed(0)}" rx="${(40+rn()*70).toFixed(0)}" ry="${(12+rn()*18).toFixed(0)}" fill="${T.alt}" opacity=".7"/>`;}
+ out+=`<g filter="url(#soft)">${bands}</g><rect width="760" height="752" filter="url(#mottle)" opacity=".22"/><rect width="760" height="752" filter="url(#grain)" opacity=".28"/>`;
+ // river across Ratio River with a lake
+ const rv='M-10 405 C 90 396, 170 416, 260 403 S 430 395, 530 409 S 690 399, 770 406';
+ out+=`<path d="${rv}" fill="none" stroke="#3b7fb1" stroke-width="19" stroke-linecap="round"/><path d="${rv}" fill="none" stroke="#5aa6d8" stroke-width="14"/><path d="${rv}" fill="none" stroke="#9ad0f0" stroke-width="2" stroke-dasharray="14 22" opacity=".9"/>`;
+ // road
+ const d='M'+pts.map(p=>p.x.toFixed(1)+' '+p.y).join(' L');
+ out+=`<path d="${d}" fill="none" stroke="#4e3a28" stroke-width="18" stroke-linejoin="round" stroke-linecap="round" opacity=".85"/><path d="${d}" fill="none" stroke="#d5b788" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#b8976a" stroke-width="2" stroke-dasharray="3 11" stroke-linecap="round" opacity=".9"/>`;
+ // bridge where the road crosses the river (x=70)
+ let planks='';for(let y=393;y<418;y+=4)planks+=`<rect x="58" y="${y}" width="24" height="3" fill="#9a6d3d"/>`;
+ out+=`<rect x="57" y="391" width="26" height="29" fill="#6e4b2a"/>${planks}<path d="M56 390 V421 M84 390 V421" stroke="#4a311b" stroke-width="3"/>`;
+ // scatter decorations
+ const segs=pts.slice(0,-1).map((p,i)=>[p,pts[i+1]]);
+ const segDist=(px,py,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy;let t=l?((px-a.x)*dx+(py-a.y)*dy)/l:0;t=Math.max(0,Math.min(1,t));return Math.hypot(px-a.x-t*dx,py-a.y-t*dy);};
+ const blocked=(x,y,w,h,r)=>{if(x-w/2<6||x+w/2>754||y>748||y-h<3)return true;
+  for(let i=0;i<43;i++){const p=pts[i],tr=i===42?40:i%7===6?32:27,qx=Math.max(x-w/2,Math.min(p.x,x+w/2)),qy=Math.max(y-h,Math.min(p.y,y));if(Math.hypot(p.x-qx,p.y-qy)<tr+3)return true;}
+  const sm=[[x,y],[x-w/2,y],[x+w/2,y],[x,y-h],[x-w/2,y-h],[x+w/2,y-h],[x,y-h/2],[x-w/2,y-h/2],[x+w/2,y-h/2]];
+  for(const sg of segs)for(const [sx,sy] of sm)if(segDist(sx,sy,sg[0],sg[1])<12)return true;
+  const by=r*100;if(r<6&&y-h<by+45&&(x-w/2<235||x+w/2>505))return true;
+  if(y>384&&y-h<426&&r>=3&&r<=4)return true;
+  if(x+w/2>262&&x-w/2<498&&y>560)return true;
+  if(y>662&&(x-w/2<228||x+w/2>664))return true;
+  for(const o of decos)if(Math.abs(o.x-x)<(o.w+w)*.4&&Math.abs(o.y-y)<Math.max(7,(o.h+h)*.22))return true;return false;};
+ for(let r=0;r<7;r++){const T=TERR[r],y0=r===0?0:r*100+18,y1=r===6?752:r*100+118,tot=T.decos.reduce((a,b)=>a+b[1],0);
+  for(let k=0;k<T.tries;k++){let pick=rn()*tot,type=T.decos[0][0];for(const [t,wt] of T.decos){if((pick-=wt)<0){type=t;break;}}
+   const sc=.78+rn()*.5,[bw,bh]=DSIZE[type],w=bw*sc,h=bh*sc,x=10+rn()*740,y=y0+h+2+rn()*Math.max(1,y1-y0-h-2);
+   if(blocked(x,y,w,h,r))continue;decos.push({type,x,y,w,h,s:sc,r});}}
+ decos.sort((a,b)=>a.y-b.y);out+=decos.map(o=>decoSVG(o.type,o.x,o.y,o.s,TERR[o.r],rn)).join('');
+ out+=castleSVG();
+ out+=`<rect width="760" height="752" fill="url(#vig)"/>`;
+ return out;}
+const MAP_DEFS=`<defs>
+<filter id="soft" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="9"/></filter>
+<filter id="mottle" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="3" seed="4"/><feColorMatrix values="0 0 0 0 0.08  0 0 0 0 0.1  0 0 0 0 0.06  1.6 0 0 0 -0.62"/></filter>
+<filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="9" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.9 0 0 0 -0.35"/></filter>
+<filter id="fog" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.007 0.03" numOctaves="3" seed="11"/><feColorMatrix values="0 0 0 0 0.96  0 0 0 0 0.97  0 0 0 0 0.98  2.2 0 0 0 -0.55"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+<filter id="tshadow" x="-40%" y="-40%" width="180%" height="190%"><feDropShadow dx="0" dy="3" stdDeviation="2.2" flood-color="#17263a" flood-opacity=".5"/></filter>
+<radialGradient id="vig" cx="50%" cy="50%" r="72%"><stop offset="62%" stop-color="#0b1420" stop-opacity="0"/><stop offset="100%" stop-color="#0b1420" stop-opacity=".42"/></radialGradient>
+</defs>`;
+function renderMap(){if(!TERRAIN_SVG)TERRAIN_SVG=buildTerrain();let s=MAP_DEFS+TERRAIN_SVG;
+ for(let r=1;r<7;r++)if(!S.cleared[r-1]){const y0=r*100+18,h=r===6?734-r*100:100;s+=`<rect x="0" y="${y0}" width="760" height="${h}" fill="#e9eef3" opacity=".5"/><rect x="0" y="${y0}" width="760" height="${h}" fill="#fff" filter="url(#fog)"/>`;}
+ s+=MAP_CHROME;
+ for(let r=0;r<6;r++){const reg=REGIONS[r];s+=`<text x="24" y="${r*100+38}" class="band-label" fill="var(--ink)">${reg.name.toUpperCase()}</text><text x="736" y="${r*100+38}" text-anchor="end" class="band-topic" fill="var(--ink)">${TOPIC_NAMES[reg.topic]}${S.cleared[r]?' · cleared':''}</text>`;}
+ for(let i=0;i<43;i++){const {x,y}=tileXY(i),t=tileType(i),r=regionOf(i),col=r<6?REGIONS[r].color:FINAL.color,lock=r>0&&!S.cleared[r-1];
+  const done=(t==='T'&&S.opened[i])||(t==='G'&&S.cleared[r]),big=t==='G'||t==='F',rad=t==='F'?34:big?28:23,info=t==='F'?['Castle of Infinity','Final battle']:TILE_INFO[t];
+  s+=`<g transform="translate(${x.toFixed(1)} ${y})" class="${lock?'locked':''}"><title>${info[0]}: ${info[1]}</title><circle r="${rad}" fill="${big?col:'#fbf8f1'}" stroke="${big?'var(--ink)':col}" stroke-width="${big?3:4}" filter="url(#tshadow)"/>${big?'':`<circle r="${rad-6}" fill="none" stroke="${col}" stroke-opacity=".35" stroke-width="1.5"/>`}<g class="${done?'tile-done':''}" ${big?'transform="scale(1.2)"':''}>${glyph(t)}</g>${done&&t==='G'?'<path d="M-8 2 L-2 8 L9 -6" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>':''}</g>`;}
+ s+=`<text x="380" y="743" text-anchor="middle" class="castle-label">CASTLE OF INFINITY</text>`;
+ const p=tileXY(S.pos);
+ if(S.cleared[0]&&!S.secrets.mushroom)s+=`<g id="mush" style="cursor:pointer" transform="translate(225 214)"><title>A strange mushroom</title><ellipse cx="0" cy="0" rx="6" ry="2" fill="#000" opacity=".3"/><rect x="-1.8" y="-6" width="3.6" height="6" rx="1.5" fill="#f4ead2"/><path d="M-7 -5 A7 6 0 0 1 7 -5 Z" fill="#f3b229" stroke="#7a5a12" stroke-width="1"/><circle cx="-2.5" cy="-8" r="1.2" fill="#fff"/><circle cx="2.5" cy="-7" r="1" fill="#fff"/></g>`;
+ s+=`<g id="token" style="transform:translate(${p.x+10}px,${p.y-10}px)"><g class="${S.cheats&&S.cheats.rainbow?'rainbow':''}" transform="scale(${S.cheats&&S.cheats.big?1.8:1})"><ellipse cx="0" cy="1" rx="7" ry="2.5" fill="#000" opacity=".35"/><path d="M0 0 C-3 -7 -14 -13 -14 -25 A14 14 0 1 1 14 -25 C14 -13 3 -7 0 0 Z" fill="${heroAv().bg}" stroke="var(--ink)" stroke-width="2.5"/><svg x="-12.5" y="-37.5" width="25" height="25" viewBox="0 0 100 100"><clipPath id="pinclip"><circle cx="50" cy="50" r="50"/></clipPath><g clip-path="url(#pinclip)">${avatarInner(heroAv(),heroLetter())}</g></svg></g></g>`;
+ $('map').innerHTML=s;
+ const r=regionOf(S.pos);
+ if(r===6){$('regionTitle').textContent=FINAL.name;$('regionSub').textContent=S.won?'The dragon is defeated':'The Infinity Dragon awaits. Every topic is in play.';}
+ else{$('regionTitle').textContent=REGIONS[r].name;$('regionSub').textContent=`Topic: ${TOPIC_NAMES[REGIONS[r].topic]} · Guardian ${S.cleared[r]?'defeated':'waiting at the gate'}`;}}
+function placeToken(){const p=tileXY(S.pos),t=$('token');if(t)t.style.transform=`translate(${p.x+10}px,${p.y-10}px)`;}
+function renderControls(){const c=$('controls');
+ if(ctrlMode==='choose'){c.innerHTML=`<div class="dice">${dice.map((d,i)=>`<div class="choose"><button class="die" id="pick${i}" aria-label="Move ${d}"></button>Move ${d}</div>`).join('')}</div><p class="ctrl-note">${dice.length>2?'Loaded dice: pick any number you like.':'Power roll earned. Pick the die you want to move with.'}</p>`;
+  dice.forEach((d,i)=>{renderDie($('pick'+i),d);$('pick'+i).onclick=()=>{ctrlMode='idle';lastRoll=d;renderControls();moveBy(d);};});return;}
+ c.innerHTML=`<div class="dice"><div class="die" id="die1" role="img"></div></div><button class="btn primary" id="rollBtn">Roll the die</button><button class="btn" id="powerBtn">Power roll</button><button class="btn sm toggle" id="luckBtn" type="button" aria-pressed="${S.luck?'true':'false'}" title="When on, rolling a 5 or 6 lets you skip a battle, trap, quest or blitz">Lucky skips: ${S.luck?'On':'Off'}</button><p class="roll-msg" id="rollMsg" aria-live="polite">${rollMsg||(S.luck?'Roll to move that many spaces. Roll a 5 or 6 to earn a lucky skip.':'Roll to move that many spaces along the road.')}</p>`;
+ renderDie($('die1'),dice[0]);$('luckBtn').onclick=()=>{S.luck=!S.luck;rollMsg='';save();renderControls();toast('Lucky skips '+(S.luck?'on':'off'),S.luck?'Roll a 5 or 6 to skip a battle, trap, quest or blitz. Guardians can never be skipped.':'Every encounter must be played.');};$('rollBtn').onclick=()=>roll(false);$('powerBtn').onclick=()=>roll(true);$('rollBtn').disabled=$('powerBtn').disabled=busy||S.won&&S.pos===42;}
+function renderLegend(){$('legend').innerHTML=Object.entries(TILE_INFO).map(([k,v])=>`<span><svg viewBox="-16 -16 32 32" aria-hidden="true">${glyph(k)}</svg>${v[0]}</span>`).join('');}
+function renderSheet(){const h=S.hero,c=CLASSES[h.cls];
+ $('heroPanel').innerHTML=`<div class="hero-row">${avatar()}<div style="flex:1;min-width:0"><div class="hero-name">${esc(h.name)}</div><div class="hero-cls">Level ${h.lv} ${c.name}${S.ng?` · New Game+ ${S.ng}`:''}</div></div><button class="btn sm" id="lookBtn" type="button">Change look</button></div>
+ <dl class="kv"><dt>Attack power</dt><dd class="num">${heroDmg()}</dd><dt>Best combo</dt><dd class="num">${S.best}</dd><dt>Battles won</dt><dd class="num">${S.wins}</dd><dt>Best Blitz</dt><dd class="num">${S.blitzBest}</dd><dt>Secrets found</dt><dd class="num">${Object.keys(S.secrets||{}).length}/${Object.keys(SECRETS).length}</dd><dt>Cheat codes used</dt><dd class="num">${S.cheatUses||0}</dd></dl>
+ <div class="row"><label for="diffSel" class="small">Difficulty</label><select id="diffSel"><option value="gentle">Gentle</option><option value="standard">Standard</option><option value="exam">Exam ready</option></select><span style="flex:1"></span><span id="resetBox"><button class="btn sm" id="resetBtn">New hero</button></span></div>`;
+ $('lookBtn').onclick=openLook;$('diffSel').value=S.diff;$('diffSel').onchange=e=>{S.diff=e.target.value;save();toast('Difficulty changed',e.target.selectedOptions[0].textContent);};
+ $('resetBtn').onclick=()=>{$('resetBox').innerHTML='<span class="small">Erase this hero?</span> <button class="btn sm danger" id="resetYes">Erase</button> <button class="btn sm" id="resetNo">Keep</button>';$('resetYes').onclick=()=>{try{localStorage.removeItem(SAVE);}catch(e){}S=null;closeDrawer();openStart();};$('resetNo').onclick=renderSheet;};
+ $('bagPanel').innerHTML=`<h3>Bag</h3><div class="bag">${['potion','scroll','shield'].map(k=>`<div class="item">${itemIcon(k)}<b class="num">${h.items[k]}</b>${SHOP[k].name}</div>`).join('')}</div>${h.items.potion>0&&h.hp<h.maxHp?'<button class="btn sm" id="drink">Drink a potion (+12 HP)</button>':''}`;
+ if($('drink'))$('drink').onclick=()=>{drink();};
+ let worst=null;TOPICS.forEach(t=>{const st=S.stats[t];if(st.a>=3){const p=st.c/st.a;if(!worst||p<worst.p)worst={t,p};}});
+ $('skillPanel').innerHTML=`<h3>Skill book</h3>${TOPICS.map(t=>{const st=S.stats[t],p=st.a?Math.round(100*st.c/st.a):0;return `<div class="skill"><span>${TOPIC_NAMES[t]}</span><div class="bar"><i style="width:${p}%"></i></div><span class="pct num">${st.a?p+'%':'–'}</span></div>`;}).join('')}
+ <div class="tip">${worst&&worst.p<.8?`Practise next: <b>${TOPIC_NAMES[worst.t]}</b>. Accuracy ${Math.round(worst.p*100)}%.`:TOPICS.some(t=>S.stats[t].a)?'Strong across the topics you have tried. Keep going.':'Answer questions to fill your skill book.'}</div>`;
+ const got=Object.keys(S.ach).length;
+ $('achPanel').innerHTML=`<h3>Achievements · <span class="num">${got}/${Object.keys(ACH).length}</span></h3><div class="ach">${Object.entries(ACH).map(([k,v])=>`<div class="badge ${S.ach[k]?'on':''}"><b>${v[0]}</b>${v[1]}</div>`).join('')}</div>`;
+ $('logPanel').innerHTML=`<h3>Adventure log</h3>${S.log.length?`<ul class="log">${S.log.map(l=>`<li>${l}</li>`).join('')}</ul>`:'<p class="small">Your story starts at the camp in Number Meadows.</p>'}`;renderCodes();}
+function renderAll(){renderHUD();renderMap();renderControls();renderSheet();}
+function drink(){const h=S.hero;if(h.items.potion<1||h.hp>=h.maxHp)return false;h.items.potion--;h.hp=Math.min(h.maxHp,h.hp+12);save();renderHUD();renderSheet();toast('Potion','You feel better. HP '+h.hp+'/'+h.maxHp);return true;}
+function toast(title,text){const t=document.createElement('div');t.className='toast';t.innerHTML=`<b>${esc(title)}</b>${esc(text)}`;$('toasts').appendChild(t);setTimeout(()=>t.remove(),3800);}
+
+/* ---------------- Dialog + question widget ---------------- */
+let dlgMode='free';
+function openDialog(html,mode='free'){dlgMode=mode;$('dlgX').hidden=mode==='locked';$('dialog').innerHTML=html;$('modal').hidden=false;$('modal').scrollTop=0;}
+function tryClose(){if($('modal').hidden||dlgMode==='locked')return;
+ if(dlgMode==='elite'){S.hero.hp=S.hero.maxHp;save();closeDialog();return;}
+ if(dlgMode==='flee'){if($('fleeBox')){$('fleeNo').focus();return;}const cost=Math.min(5,S.hero.gold);
+  $('dialog').insertAdjacentHTML('afterbegin',`<div class="luck-banner flee" id="fleeBox"><span><b>Run away?</b> You’ll drop ${cost} gold and get no reward.</span><span class="row"><button class="btn sm danger" id="fleeYes" type="button">Run away</button><button class="btn sm" id="fleeNo" type="button">Keep going</button></span></div>`);$('modal').scrollTop=0;$('fleeNo').focus();
+  $('fleeYes').onclick=()=>{S.hero.gold-=cost;S.streak=0;addLog(`Ran away${cost?` and dropped ${cost} gold`:''}.`);save();closeDialog();toast('You escaped','You live to fight another day.');};
+  $('fleeNo').onclick=()=>$('fleeBox').remove();return;}
+ closeDialog();}
+function closeDialog(){dlgMode='free';if(activeTimer){clearInterval(activeTimer);activeTimer=null;}$('modal').hidden=true;$('dialog').innerHTML='';renderAll();}
+function head(eyebrow,title,calm){return `<div class="dlg-head ${calm?'calm':''}"><span class="eyebrow">${eyebrow}</span><h3>${title}</h3></div>`;}
+function askQ(el,q,o){const id='q'+(++qid);
+ el.innerHTML=`<div class="qbox"><div class="chips"><span class="chip">${TOPIC_NAMES[q.topic]}</span>${q.sub?`<span class="chip soft">${q.sub}</span>`:''}${o.tag?`<span class="chip soft">${o.tag}</span>`:''}</div>
+ <p class="q-text">${q.text}</p>${q.img?`<div class="q-fig">${q.img}</div>`:''}
+ <form class="ans-row" id="${id}f"><input id="${id}i" class="ans" autocomplete="off" spellcheck="false" placeholder="Your answer" aria-label="Your answer"><button class="btn primary" type="submit">${o.verb||'Answer'}</button></form>
+ ${S.hero.items.scroll>0?`<div><button type="button" class="link-btn" id="${id}h">Use a hint scroll (${S.hero.items.scroll} left)</button></div>`:''}
+ <div class="hint" id="${id}hint" hidden></div><div class="fb" id="${id}fb" aria-live="polite"></div></div>`;
+ const f=$(id+'f'),inp=$(id+'i');setTimeout(()=>inp.focus(),40);
+ const hb=$(id+'h');if(hb)hb.onclick=()=>{S.hero.items.scroll--;$(id+'hint').hidden=false;$(id+'hint').textContent='Hint: '+q.hint;hb.remove();save();renderSheet();};
+ f.onsubmit=e=>{e.preventDefault();if(!inp.value.trim()){inp.focus();return;}const sk=$('skipBox');if(sk)sk.remove();const ok=checkAns(q,inp.value);inp.disabled=true;f.querySelector('button').disabled=true;if(hb)hb.disabled=true;record(q,ok);
+  const r=o.onAnswer?o.onAnswer(ok):{};const label=r.label||'Continue';
+  const fb=$(id+'fb');fb.className='fb '+(ok?'good':'bad');
+  fb.innerHTML=`<p class="fb-head">${ok?P(PRAISE):`Not quite. The answer is <span class="num">${q.show}</span>.`}</p><p>${q.exp}</p>${r.note?`<p class="fb-note">${r.note}</p>`:''}<button class="btn primary" type="button" id="${id}c">${label}</button>`;
+  const cb=$(id+'c');cb.focus();cb.onclick=()=>o.onContinue&&o.onContinue(ok);};}
+
+/* ---------------- Movement ---------------- */
+async function roll(power){if(busy||ctrlMode!=='idle')return;
+ if(power){const q=makeQ(TOPICS[Math.min(5,regionOf(S.pos))],1);openDialog(head('Pathfinder','Power roll',true)+'<p class="story">Answer correctly to roll two dice and choose your move.</p><div id="qarea"></div>');
+  askQ($('qarea'),q,{verb:'Answer',onAnswer:ok=>({label:ok?'Roll two dice':'Roll one die',note:ok?'':'No bonus this time. You still get a normal roll.'}),onContinue:async ok=>{closeDialog();if(ok){busy=true;renderControls();await spin(2);busy=false;ctrlMode='choose';renderControls();}else{doRoll();}}});return;}
+ doRoll();}
+async function spin(n){const els=[$('die1')];for(let k=0;k<9;k++){dice=[R(1,6),R(1,6)];if(els[0]){els[0].classList.add('rolling');renderDie(els[0],dice[0]);}await sleep(70);}if(els[0])els[0].classList.remove('rolling');if(n===1)renderDie(els[0],dice[0]);}
+async function doRoll(){checkPiTime();if(S.cheats&&S.cheats.loaded){dice=[1,2,3,4,5,6];ctrlMode='choose';renderControls();return;}
+ busy=true;renderControls();await spin(1);S.sixRun=dice[0]===6?(S.sixRun||0)+1:0;if(S.sixRun>=3){secret('sixes');S.sixRun=0;}await sleep(200);lastRoll=dice[0];moveBy(dice[0]);}
+function setMsg(t){rollMsg=t;const e=$('rollMsg');if(e)e.textContent=t;}
+async function moveBy(n){busy=true;renderControls();let moved=0;setMsg(`You rolled ${n}. Moving ${n} space${n>1?'s':''}…`);
+ for(let i=0;i<n;i++){if(S.pos>=42)break;if(tileType(S.pos)==='G'&&!S.cleared[regionOf(S.pos)]){setMsg(`Stopped by the Guardian with ${n-i} space${n-i>1?'s':''} unused.`);break;}S.pos++;moved++;placeToken();if(n-i-1>0)setMsg(`You rolled ${n}. ${n-i-1} space${n-i-1>1?'s':''} to go…`);await sleep(320);}
+ const t=tileType(S.pos),nm=t==='F'?'the Castle of Infinity':TILE_INFO[t][0];lucky=S.luck&&n>=5&&'BRQX'.includes(t);
+ if(!rollMsg.startsWith('Stopped'))rollMsg=`You rolled ${n} and landed on ${t==='F'?nm:'a '+nm.toLowerCase()} space.${lucky?' Lucky roll!':''}`;
+ busy=false;save();renderAll();await sleep(150);land(moved);}
+function offerSkip(t){const L=lucky;lucky=false;if(!L||!'BRQX'.includes(t)||$('modal').hidden)return;
+ $('dialog').insertAdjacentHTML('afterbegin',`<div class="luck-banner" id="skipBox"><span><b>Lucky ${lastRoll}!</b> Fortune smiles on you. Skip this ${TILE_INFO[t][0].toLowerCase()}?</span><button class="btn sm primary" id="skipBtn" type="button">Skip it</button></div>`);
+ $('skipBtn').onclick=()=>{S.skips=(S.skips||0)+1;addLog(`Used a lucky ${lastRoll} to skip a ${TILE_INFO[t][0].toLowerCase()}.`);rollMsg=`Lucky skip! You slipped past the ${TILE_INFO[t][0].toLowerCase()}.`;save();closeDialog();toast('Lucky skip','You slip past unnoticed. No reward, but no risk either.');};}
+function land(moved){const t=tileType(S.pos),r=regionOf(S.pos);
+ if(t==='G'&&!S.cleared[r]&&moved<1)toast('The way is blocked',`${REGIONS[r].boss} guards the gate.`);
+ switch(t){case 'C':openCamp();break;case 'B':openBattle('battle');break;case 'T':openTreasure();break;case 'X':openBlitz();break;case 'R':openTrap();break;case 'Q':openQuest();break;
+  case 'G':if(S.cleared[r])toast('Gate open','The road continues.');else openBattle('boss');break;
+  case 'F':if(S.won)openVictory();else openBattle('final');break;}
+ offerSkip(t);}
+
+/* ---------------- Encounters ---------------- */
+function anim(el,cls){if(!el)return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);}
+const RM=matchMedia('(prefers-reduced-motion: reduce)');
+const SYMS=[['7','−','²','√'],['½','¾','%'],['x','y','n'],['∶','∝','≈'],['△','∠','π'],['μ','%','σ']];
+const HERO_PROJ={knight:{kind:'sword',color:'#c9d3dd'},mage:{kind:'fire',color:'#f3842a'},ranger:{kind:'arrow',color:'#e2533c'}};
+function projHTML(o){
+ if(o.kind==='arrow')return '<svg width="48" height="16" viewBox="-4 0 52 16" style="display:block"><path d="M2 8 H38" stroke="#6b4a2e" stroke-width="3" stroke-linecap="round"/><path d="M37 2 L48 8 L37 14 Z" fill="#b8c0c9" stroke="#17263a" stroke-width="1.5" stroke-linejoin="round"/><path d="M4 8 L0 2 M4 8 L0 14 M9 8 L5 2 M9 8 L5 14" stroke="#e2533c" stroke-width="2.5" stroke-linecap="round"/></svg>';
+ if(o.kind==='sword')return '<svg width="42" height="42" viewBox="-21 -21 42 42" style="display:block"><path d="M-3 -19 L0 -22 L3 -19 L3 6 L-3 6 Z" fill="#dfe5ec" stroke="#17263a" stroke-width="1.5" stroke-linejoin="round"/><path d="M0 -22 L3 -19 L3 6 L0 6 Z" fill="#aab4bf"/><rect x="-10" y="6" width="20" height="4" rx="2" fill="#f3b229" stroke="#17263a" stroke-width="1.5"/><rect x="-2" y="10" width="4" height="9" rx="1" fill="#6b4a2e" stroke="#17263a" stroke-width="1"/></svg>';
+ if(o.kind==='fire')return `<div class="fireball${o.big?' big':''}"></div>`;
+ return `<div class="orb" style="--oc:${o.color}">${o.sym}</div>`;}
+function burst(ar,x,y,c){const b=document.createElement('div');b.className='burst';b.style.cssText=`left:${x}px;top:${y}px;--bc:${c}`;ar.appendChild(b);setTimeout(()=>b.remove(),500);
+ for(let i=0;i<9;i++){const sp=document.createElement('div');sp.className='spark';sp.style.cssText=`left:${x}px;top:${y}px;background:${c}`;ar.appendChild(sp);const a=i/9*Math.PI*2+Math.random()*.4,r=26+Math.random()*22;
+  sp.animate([{transform:'translate(-50%,-50%)',opacity:1},{transform:`translate(calc(-50% + ${(Math.cos(a)*r).toFixed(1)}px),calc(-50% + ${(Math.sin(a)*r).toFixed(1)}px)) scale(.3)`,opacity:0}],{duration:460,easing:'ease-out'}).onfinish=()=>sp.remove();}}
+function fireProj(o){const ar=o.from.closest('.arena');if(!ar||RM.matches||!o.from.animate){o.onHit();return;}
+ const A=ar.getBoundingClientRect(),f=o.from.getBoundingClientRect(),t=o.to.getBoundingClientRect();
+ const x0=f.left+f.width/2-A.left,y0=f.top+f.height/2-A.top,x1=t.left+t.width/2-A.left,y1=t.top+t.height/2-A.top;
+ const mx=(x0+x1)/2,my=Math.min(y0,y1)-(o.kind==='sword'?50:o.kind==='arrow'?38:24),dur=o.big?560:440;
+ const pt=u=>[(1-u)**2*x0+2*(1-u)*u*mx+u*u*x1,(1-u)**2*y0+2*(1-u)*u*my+u*u*y1];
+ const spin=o.kind==='sword'?(x1>x0?900:-900):o.kind==='orb'?(x1>x0?360:-360):0;
+ const frames=[];for(let k=0;k<=10;k++){const u=k/10,[x,y]=pt(u);let rot=spin*u;if(o.kind==='arrow'){const [xa,ya]=pt(Math.max(0,u-.05)),[xb,yb]=pt(Math.min(1,u+.05));rot=Math.atan2(yb-ya,xb-xa)*180/Math.PI;}
+  frames.push({transform:`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-50%) rotate(${rot.toFixed(1)}deg) scale(${k===0?.5:1})`,opacity:k===0?0:1});}
+ const p=document.createElement('div');p.className='proj';p.innerHTML=projHTML(o);ar.appendChild(p);
+ let tr=null;if(o.kind==='fire'||o.kind==='orb'){const t0=performance.now();tr=setInterval(()=>{const u=Math.min(1,(performance.now()-t0)/dur),[x,y]=pt(u);const d=document.createElement('div');d.className='trail';d.style.cssText=`left:${x}px;top:${y}px;background:${o.kind==='fire'?(Math.random()<.5?'#ffd34d':'#f3842a'):o.color}`;ar.appendChild(d);setTimeout(()=>d.remove(),470);},30);}
+ p.animate(frames,{duration:dur,easing:'cubic-bezier(.35,.1,.65,1)'}).onfinish=()=>{clearInterval(tr);p.remove();burst(ar,x1,y1,o.blocked?'#3a8fd6':o.color);o.onHit();};}
+function strike(from,to,dmg,blocked,dir,proj){const a=$(from),b=$(to);if(!a||!b)return;const av=a.querySelector('.avatar,.mon'),bv=b.querySelector('.avatar,.mon');anim(av,dir==='r'?'lunge-r':'lunge-l');
+ const land=()=>{if(!b.isConnected)return;anim(bv,blocked?'block':'hit');const n=document.createElement('div');n.className='dmg'+(blocked?' blocked':'');n.textContent=blocked?'Blocked!':'−'+dmg;b.appendChild(n);setTimeout(()=>n.remove(),1000);};
+ setTimeout(()=>{if(!a.isConnected)return;fireProj(Object.assign({},proj||{kind:'orb',color:'#e2533c',sym:'!'},{from:av,to:bv,blocked,onHit:land}));},140);}
+function openBattle(kind,rr){const r=rr??regionOf(S.pos),reg=kind==='final'?FINAL:REGIONS[r],elite=kind==='elite';const name=kind==='battle'?P(reg.enemies):elite?reg.boss+' (Elite)':reg.boss;
+ const hp=kind==='final'?32:elite?20+r*3:kind==='boss'?14+r*3:5+r*2;const atk=(kind==='final'?7:elite?5+r:kind==='boss'?4+r:2+Math.floor(r/2))+(S.ng||0);
+ const E={hp,max:hp};let hurt=false,turn=0,wrong=0;
+ openDialog(head(kind==='battle'?'Battle':kind==='boss'?'Guardian of the gate':elite?'Elite rematch':'Final battle',esc(name))+`${elite?'<p class="small">Exam-level questions. Win with no mistakes for 3 stars, two or fewer for 2 stars.</p>':''}
+ <div class="arena"><div class="fighter" id="heroBox">${avatar(true)}<div class="f-name">${esc(S.hero.name)}</div><div class="bar"><i id="bh"></i></div><div class="f-num num" id="bht"></div></div><div class="vs">VS</div>
+ <div class="fighter" id="enemyBox">${monsterSVG(reg.color,hash(name),kind!=='battle')}<div class="f-name">${esc(name)}</div><div class="bar ehp"><i id="be"></i></div><div class="f-num num" id="bet"></div></div></div>
+ <div class="battle-items" id="bitems"></div><div id="qarea"></div>`,elite?'elite':'flee');
+  let tk=0;$('enemyBox').style.cursor='pointer';$('enemyBox').onclick=()=>{tk++;const el=$('enemyBox');el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');if(tk===5){toast('Hee hee hee!',name+' giggles uncontrollably.');secret('tickle');}};
+ function bars(){$('bh').style.width=100*S.hero.hp/S.hero.maxHp+'%';$('bht').textContent=`HP ${S.hero.hp}/${S.hero.maxHp}`;$('be').style.width=100*E.hp/E.max+'%';$('bet').textContent=`HP ${E.hp}/${E.max} · hits for ${atk}`;
+  const it=S.hero.items;$('bitems').innerHTML=`<span>Combo ${S.streak}${combo()?` (+${combo()} damage)`:''}</span>${elite?`<span>· Mistakes ${wrong}</span>`:''}${it.shield?`<span>· Shield ready</span>`:''}${it.potion&&S.hero.hp<S.hero.maxHp?`<button class="btn sm" id="bpot">Drink potion (${it.potion})</button>`:''}`;
+  if($('bpot'))$('bpot').onclick=()=>{drink();bars();};}
+ function hit(id){const el=$(id);if(!el)return;el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');}
+ function next(){turn++;bars();askQ($('qarea'),makeQ(elite?TOPICS[r]:topicFor(kind),elite?3:pickLv(kind)),{verb:'Strike',tag:'Turn '+turn,
+  onAnswer(ok){if(ok){const d=S.cheats&&S.cheats.onehit?E.hp:heroDmg()+combo();E.hp=Math.max(0,E.hp-d);strike('heroBox','enemyBox',d,false,'r',HERO_PROJ[S.hero.cls]);bars();return {label:E.hp<=0?'Claim victory':'Next turn',note:`You strike for ${d} damage${combo()?' with your combo bonus':''}.`};}
+   wrong++;const res=hurtHero(atk);if(!res.blocked)hurt=true;strike('enemyBox','heroBox',atk,res.blocked,'l',kind==='final'?{kind:'fire',big:true,color:'#d9381e'}:{kind:'orb',color:reg.color,sym:P(SYMS[r])});bars();return {label:S.hero.hp<=0?'Continue':'Next turn',note:res.blocked?(res.god?'Infinity mode: the hit bounces right off you.':'Your shield charm absorbs the blow.'):`${esc(name)} hits you for ${atk} damage.`};},
+  onContinue(){if(E.hp<=0)win();else if(S.hero.hp<=0){if(elite)lose();else faint();}else next();}});}
+ function lose(){S.hero.hp=S.hero.maxHp;save();challengeEnd({title:name,stars:0,gain:0,line:'You were knocked out this time. No gold is lost in the Challenge Hall, and your HP has been restored.',retry:()=>openBattle('elite',r)});}
+ function win(){S.wins++;grant('first');if(!hurt)grant('flawless');bump('win',1);let gold,xp,extra='';
+  if(elite){const st=wrong===0?3:wrong<=2?2:1;S.hero.hp=S.hero.maxHp;const gain=award(String(r),'elite',st,st);addLog(`Beat ${esc(name)} for ${st} star${st>1?'s':''}.`);save();
+   challengeEnd({title:name,stars:st,gain,line:`Victory with ${wrong} mistake${wrong===1?'':'s'}. Your HP has been restored.`,retry:()=>openBattle('elite',r)});return;}
+  if(kind==='battle'){gold=8+3*r+R(0,5);xp=10+5*r;addLog(`Defeated ${esc(name)} in ${reg.name}.`);}
+  else if(kind==='boss'){gold=40+10*r;xp=40+10*r;S.cleared[r]=true;grant('gate');addLog(`Defeated ${esc(name)}. ${reg.name} challenges are open.`);extra=`<p class="story">The gate swings open. ${r<5?`${REGIONS[r+1].name} lies ahead, where ${TOPIC_NAMES[REGIONS[r+1].topic].toLowerCase()} rule.`:'The Castle of Infinity looms in the distance.'}</p><p class="small">New: ${reg.name} challenges are unlocked in the Challenge Hall.</p>`;}
+  else{gold=150;xp=120;S.won=true;grant('champ');addLog('Defeated the Infinity Dragon. Numeria is saved.');}
+  S.hero.gold+=gold;addXP(xp);save();
+  if(kind==='final'){openVictory();return;}
+  openDialog(head('Victory',`${esc(name)} is defeated`,true)+extra+`<div class="rewards"><span class="reward num">+${gold} gold</span><span class="reward num">+${xp} XP</span>${!hurt?'<span class="reward">Flawless</span>':''}</div><div class="row"><button class="btn primary" id="done">Back to the map</button>${kind==='boss'?'<button class="btn" id="tohall">Open Challenge Hall</button>':''}</div>`);$('done').onclick=closeDialog;$('done').focus();if($('tohall'))$('tohall').onclick=openHall;}
+ next();}
+function faint(){const lost=Math.floor(S.hero.gold/2);S.hero.gold-=lost;S.hero.hp=S.hero.maxHp;S.streak=0;S.pos=Math.min(regionOf(S.pos),5)*7;addLog(`Fainted and woke at camp. Lost ${lost} gold.`);save();
+ openDialog(head('Knocked out','You wake by the campfire')+`<p class="story">The healers carried you back to camp and patched you up. You dropped ${lost} gold on the way. Look back at the working from that fight, then try again.</p><button class="btn primary" id="done">Get back up</button>`);$('done').onclick=closeDialog;$('done').focus();}
+function openTreasure(){const i=S.pos,r=regionOf(i);if(S.opened[i]){toast('Empty chest','You already opened this one.');return;}
+ openDialog(head('Treasure','A locked chest',true)+`<div class="arena" style="grid-template-columns:1fr"><div class="fighter">${chestSVG()}</div></div><p class="story">The lock has a number dial. Solve the puzzle to open it.</p><div id="qarea"></div>`);
+ askQ($('qarea'),makeQ(topicFor('battle'),pickLv('battle')),{verb:'Unlock',onAnswer(ok){if(!ok)return {label:'Back to the map',note:'The lock holds. Land here again to have another go.'};
+  S.opened[i]=true;S.chests++;bump('chest',1);if(S.chests>=3)grant('chest3');const g=15+5*r+R(0,10);S.hero.gold+=g;let note=`Inside you find ${g} gold`;if(Math.random()<.45){const k=P(['potion','scroll','shield']);S.hero.items[k]++;note+=` and a ${SHOP[k].name.toLowerCase()}`;}addXP(6);addLog(`Opened a chest in ${REGIONS[r].name}.`);save();return {label:'Back to the map',note:note+'.'};},onContinue:closeDialog});}
+function openTrap(){const r=regionOf(S.pos),dmg=3+r,trap=P(['A pit of spikes opens beneath you','A boulder rolls down the path','Poison darts fly from the walls','The bridge planks start to crack']);
+ openDialog(head('Trap',trap)+`<p class="story">Answer correctly to escape unharmed. Get it wrong and you take ${dmg} damage.</p><div id="qarea"></div>`,'flee');
+ askQ($('qarea'),makeQ(topicFor('battle'),pickLv('battle')),{verb:'Escape',onAnswer(ok){if(ok){S.hero.gold+=5;save();return {label:'Back to the map',note:'You escape and spot 5 gold on the ground.'};}const res=hurtHero(dmg);save();return {label:S.hero.hp<=0?'Continue':'Back to the map',note:res.blocked?(res.god?'Infinity mode: the trap can’t touch you.':'Your shield charm saves you.'):`Ouch. You take ${dmg} damage.`};},
+  onContinue(){if(S.hero.hp<=0)faint();else closeDialog();}});}
+function openQuest(){const r=regionOf(S.pos),reg=REGIONS[r];let i=0,c=0;const marks=[];
+ openDialog(head('Quest',reg.name+' mission',true)+`<p class="story">${reg.quest}</p><div class="steps" id="qsteps"></div><div id="qarea"></div>`,'flee');
+ const steps=()=>{$('qsteps').innerHTML=[0,1,2].map(k=>`<span class="${marks[k]===true?'ok':marks[k]===false?'no':''}"></span>`).join('');};
+ function next(){steps();askQ($('qarea'),makeQ(reg.topic,pickLv('battle')),{tag:`Part ${i+1} of 3`,onAnswer(ok){if(ok)c++;marks[i]=ok;steps();return {label:i<2?'Next part':'Finish the quest'};},onContinue(){i++;if(i<3)next();else finish();}});}
+ function finish(){const g=12*c,xp=8*c;S.hero.gold+=g;addXP(xp);let item='';if(c===3){grant('quest');const k=P(['potion','scroll','shield']);S.hero.items[k]++;item=`<span class="reward">${SHOP[k].name}</span>`;}addLog(`Finished a quest in ${reg.name}: ${c}/3.`);save();
+  openDialog(head('Quest complete',`${c} of 3 solved`,true)+`<p class="story">${c===3?'A perfect mission. The villagers give you a special reward.':c?'The job is done, though not perfectly. You are paid for what you got right.':'The mission failed this time. Review the working and try the next one.'}</p><div class="rewards"><span class="reward num">+${g} gold</span><span class="reward num">+${xp} XP</span>${item}</div><button class="btn primary" id="done">Back to the map</button>`);$('done').onclick=closeDialog;$('done').focus();}
+ next();}
+function runSprint(o){openDialog(head(o.eyebrow,o.title)+`<p class="story">${o.intro}</p>${o.goals?`<div class="goal-list">${o.goals}</div>`:''}<button class="btn primary" id="go">Start the clock</button>`);
+ $('go').focus();$('go').onclick=()=>{if(o.flee)dlgMode='flee';let score=0,q;const miss=[],t0=Date.now();
+  $('dialog').innerHTML=head(o.eyebrow,o.title)+`<div class="blitz-top"><div class="timer"><i id="tbar"></i></div><span class="num" id="tleft">${o.secs}s</span><span><b>Score</b> <b class="num" id="bscore">0</b></span></div><div id="bq"></div><div class="flash" id="flash" aria-live="polite"></div>`;
+  function nq(){q=makeQ(o.topic(),o.lv());$('bq').innerHTML=`<div class="qbox"><div class="chips"><span class="chip">${TOPIC_NAMES[q.topic]}</span></div><p class="q-text">${q.text}</p>${q.img?`<div class="q-fig">${q.img}</div>`:''}<form class="ans-row" id="bf"><input class="ans" id="bi" autocomplete="off" spellcheck="false" placeholder="Answer" aria-label="Your answer"><button class="btn primary" type="submit">Go</button></form></div>`;$('bi').focus();
+   $('bf').onsubmit=e=>{e.preventDefault();const v=$('bi').value;if(!v.trim())return;const ok=checkAns(q,v);record(q,ok);const fl=$('flash');if(ok){score++;fl.className='flash good';fl.textContent=P(PRAISE);}else{miss.push(q);fl.className='flash bad';fl.textContent='Answer was '+q.show.replace(/<[^>]+>/g,'');}$('bscore').textContent=score;nq();};}
+  nq();
+  activeTimer=setInterval(()=>{const left=Math.max(0,o.secs-(Date.now()-t0)/1000);$('tbar').style.width=100*left/o.secs+'%';$('tleft').textContent=Math.ceil(left)+'s';if(left<=0){clearInterval(activeTimer);activeTimer=null;bump('timed',score,null,true);o.onEnd(score,miss);}},200);};}
+function missList(miss){return miss.length?`<p class="small">Review the ones you missed:</p><ol class="misses">${miss.slice(0,5).map(x=>`<li>${x.text}<br><b>${x.show}</b>. ${x.exp}</li>`).join('')}</ol>`:'';}
+function openBlitz(){const r=regionOf(S.pos),reg=REGIONS[r],secs=45+(S.hero.cls==='ranger'?15:0);
+ runSprint({flee:true,eyebrow:'Blitz challenge',title:'Beat the clock',secs,intro:`Answer as many ${TOPIC_NAMES[reg.topic].toLowerCase()} questions as you can in ${secs} seconds. Each correct answer earns 3 gold. Your best is ${S.blitzBest}.`,topic:()=>reg.topic,lv:()=>Math.min(2,pickLv('battle')),
+  onEnd(score,miss){const g=3*score,xp=2*score;S.hero.gold+=g;addXP(xp);const nb=score>S.blitzBest;S.blitzBest=Math.max(S.blitzBest,score);if(score>=8)grant('blitz8');addLog(`Blitz in ${reg.name}: ${score} correct.`);save();
+   openDialog(head('Time!',`You scored ${score}`,true)+`<div class="rewards"><span class="reward num">+${g} gold</span><span class="reward num">+${xp} XP</span>${nb?'<span class="reward">New best</span>':''}</div>${missList(miss)}<button class="btn primary" id="done">Back to the map</button>`);$('done').onclick=closeDialog;$('done').focus();}});}
+function openCamp(){const h=S.hero,r=regionOf(S.pos);
+ openDialog(head('Camp',`${REGIONS[Math.min(r,5)].name} campfire`,true)+`<p class="story">Rest by the fire and stock up before the road ahead. If you are knocked out in this region, you will wake up here.</p><div class="row"><button class="btn primary" id="rest" ${h.hp>=h.maxHp?'disabled':''}>${h.hp>=h.maxHp?'Already at full health':'Rest and heal to full'}</button><span class="small num" id="campgold">Gold: ${h.gold}</span></div>
+ <h4>Merchant</h4><div class="shop">${Object.entries(SHOP).map(([k,v])=>`<div class="shop-row">${itemIcon(k)}<div><b>${v.name}</b>${v.desc} You have ${h.items[k]}.</div><button class="btn sm" data-buy="${k}" ${h.gold<v.price?'disabled':''}><span class="num">${v.price}</span> gold</button></div>`).join('')}</div>${travelHTML(Math.min(r,5))}<button class="btn" id="done">Back to the road</button>`);
+ wireTravel();
+ $('rest').onclick=()=>{h.hp=h.maxHp;save();renderHUD();toast('Rested','You are at full health.');openCamp();};
+ document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const k=b.dataset.buy;if(h.gold<SHOP[k].price)return;h.gold-=SHOP[k].price;h.items[k]++;save();renderAll();toast('Bought',SHOP[k].name);openCamp();});
+ $('done').onclick=closeDialog;}
+function openVictory(){const tot=TOPICS.reduce((s,t)=>s+S.stats[t].a,0),cor=TOPICS.reduce((s,t)=>s+S.stats[t].c,0);
+ openDialog(head('Numeria is saved',`${esc(S.hero.name)}, Champion of Numeria`,true)+`<div class="arena" style="grid-template-columns:1fr"><div class="fighter">${monsterSVG(FINAL.color,7,true)}<div class="f-name">The Infinity Dragon has fallen</div></div></div>
+ <dl class="kv"><dt>Questions answered</dt><dd class="num">${tot}</dd><dt>Accuracy</dt><dd class="num">${tot?Math.round(100*cor/tot):0}%</dd><dt>Best combo</dt><dd class="num">${S.best}</dd><dt>Level</dt><dd class="num">${S.hero.lv}</dd></dl>
+ <p class="story">Start New Game+ to replay the map with harder questions while keeping your level and items.</p><div class="row"><button class="btn primary" id="ngp">Start New Game+</button><button class="btn" id="hallV">Challenge Hall</button><button class="btn" id="done">Stay here</button></div>`);
+ $('hallV').onclick=openHall;
+ $('ngp').onclick=()=>{S.ng=(S.ng||0)+1;S.pos=0;S.cleared=[false,false,false,false,false,false];S.opened={};S.won=false;addLog(`Began New Game+ ${S.ng}.`);save();closeDialog();};$('done').onclick=closeDialog;}
+
+/* ---------------- Fast travel ---------------- */
+function travelHTML(cur){const d=REGIONS.map((reg,i)=>({reg,i})).filter(({i})=>(i===0||S.cleared[i-1])&&i!==cur);if(!d.length)return '';
+ return `<h4>Fast travel</h4><p class="small">Jump to another region’s camp. Chests in cleared regions refill when you arrive.</p><div class="row">${d.map(x=>`<button class="btn sm" type="button" data-travel="${x.i}">${x.reg.name}</button>`).join('')}</div>`;}
+function wireTravel(){document.querySelectorAll('[data-travel]').forEach(b=>b.onclick=()=>{const i=+b.dataset.travel;S.pos=i*7;if(S.cleared[i])for(let k=i*7;k<i*7+6;k++)delete S.opened[k];addLog(`Travelled to ${REGIONS[i].name}.`);save();closeDialog();toast('Fast travel',`You arrive at the ${REGIONS[i].name} camp.`);});}
+
+/* ---------------- Challenge Hall ---------------- */
+const MODES={
+ time:{name:'Time Attack',goals:[6,10,14],intro:'Answer as many as you can before the clock runs out.'},
+ survive:{name:'Survival',goals:[8,15,25],intro:'Three lives. Questions get harder every 5 correct answers.'},
+ ten:{name:'Perfect Ten',goals:[7,9,10],intro:'Ten questions at a higher level. How many can you get right?'},
+ elite:{name:'Elite Rematch',goals:null,intro:'Fight a stronger guardian with exam-level questions.'}
+};
+const MAX_STARS=6*4*3+3*3;
+const totalStars=()=>S?Object.values(S.stars||{}).reduce((a,b)=>a+b,0):0;
+const starsFor=(mode,score)=>MODES[mode].goals.filter(g=>score>=g).length;
+const starStr=n=>'★'.repeat(n)+'☆'.repeat(3-n);
+const hallTopic=key=>key==='mix'?P(TOPICS.filter((_,i)=>S.cleared[i])):TOPICS[+key];
+const hallName=key=>key==='mix'?'Mixed Arena':REGIONS[+key].name;
+function award(key,mode,score,stars){const k=key+':'+mode;S.scores[k]=Math.max(S.scores[k]||0,score);const prev=S.stars[k]||0;let gain=0;
+ if(stars>prev){gain=stars-prev;S.stars[k]=stars;S.hero.gold+=20*gain;addXP(10*gain);bump('star',gain);}
+ const t=totalStars();if(t>=10)grant('stars10');if(t>=45)grant('stars45');save();return gain;}
+function challengeEnd(o){openDialog(head('Challenge complete',esc(o.title),true)+`<div class="stars big" role="img" aria-label="${o.stars} of 3 stars">${starStr(o.stars)}</div><p class="story">${o.line}</p>
+ <div class="rewards">${o.gain?`<span class="reward">+${o.gain} new star${o.gain>1?'s':''}</span><span class="reward num">+${20*o.gain} gold</span>`:'<span class="reward">No new stars this time</span>'}</div>${missList(o.miss||[])}
+ <div class="row"><button class="btn primary" id="again">Try again</button><button class="btn" id="tohall">Challenge Hall</button></div>`);
+ $('again').onclick=o.retry;$('tohall').onclick=openHall;$('again').focus();}
+function launch(key,mode){const nm=hallName(key),M=MODES[mode];
+ if(mode==='elite'){openBattle('elite',+key);return;}
+ if(mode==='time'){const secs=60+(S.hero.cls==='ranger'?15:0);runSprint({eyebrow:'Time Attack',title:nm,secs,intro:`${M.intro} You have ${secs} seconds.`,goals:M.goals.map((g,i)=>`<span>${starStr(i+1)} ${g} correct</span>`).join(''),topic:()=>hallTopic(key),lv:()=>Math.min(3,pickLv('battle')+(key==='mix'?1:0)),
+  onEnd(score,miss){const st=starsFor('time',score),gain=award(key,'time',score,st);if(score>=8)grant('blitz8');addLog(`Time Attack in ${nm}: ${score}.`);save();challengeEnd({title:'Time Attack · '+nm,stars:st,gain,miss,line:`You answered ${score} correctly. Your best here is ${S.scores[key+':time']}.`,retry:()=>launch(key,'time')});}});return;}
+ if(mode==='survive'){let lives=3,score=0,n=0,lv=1,q;const miss=[];
+  openDialog(head('Survival',nm)+`<div class="goal-list">${M.goals.map((g,i)=>`<span>${starStr(i+1)} ${g} correct</span>`).join('')}</div><div class="blitz-top"><span class="lives" id="lives" aria-label="Lives"></span><span><b>Score</b> <b class="num" id="sscore">0</b></span><span class="small" id="slv"></span></div><div id="qarea"></div>`);
+  const hud=()=>{$('lives').textContent='♥'.repeat(lives)+'♡'.repeat(3-lives);$('sscore').textContent=score;$('slv').textContent='Level '+lv;};
+  const next=()=>{n++;hud();q=makeQ(hallTopic(key),lv);askQ($('qarea'),q,{tag:'Question '+n,onAnswer(ok){if(ok){score++;if(score%5===0&&lv<3)lv++;}else{lives--;miss.push(q);}hud();
+    return {label:lives<=0?'See results':'Next question',note:ok?(score%5===0&&lv>1&&score<=10?`Level up! Questions are now level ${lv}.`:''):lives?`${lives} ${lives===1?'life':'lives'} left.`:'Out of lives.'};},
+   onContinue(){if(lives>0)return next();const st=starsFor('survive',score),gain=award(key,'survive',score,st);addLog(`Survival in ${nm}: ${score}.`);save();challengeEnd({title:'Survival · '+nm,stars:st,gain,miss,line:`You answered ${score} correctly before running out of lives. Your best here is ${S.scores[key+':survive']}.`,retry:()=>launch(key,'survive')});}});};
+  next();return;}
+ let i=0,score=0,q;const miss=[],lv=Math.max(2,pickLv('battle'));
+ openDialog(head('Perfect Ten',nm)+`<div class="goal-list">${M.goals.map((g,k)=>`<span>${starStr(k+1)} ${g}/10</span>`).join('')}</div><div class="steps" id="tsteps"></div><div id="qarea"></div>`);
+ const marks=[];const steps=()=>{$('tsteps').innerHTML=Array.from({length:10},(_,k)=>`<span class="${marks[k]===true?'ok':marks[k]===false?'no':''}"></span>`).join('');};
+ const next=()=>{steps();q=makeQ(hallTopic(key),lv);askQ($('qarea'),q,{tag:`Question ${i+1} of 10`,onAnswer(ok){marks[i]=ok;if(ok)score++;else miss.push(q);steps();return {label:i<9?'Next question':'See results'};},
+  onContinue(){i++;if(i<10)return next();const st=starsFor('ten',score),gain=award(key,'ten',score,st);addLog(`Perfect Ten in ${nm}: ${score}/10.`);save();challengeEnd({title:'Perfect Ten · '+nm,stars:st,gain,miss,line:`You scored ${score} out of 10. Your best here is ${S.scores[key+':ten']}/10.`,retry:()=>launch(key,'ten')});}});};
+ next();}
+function modeBtn(key,mode){const M=MODES[mode],k=key+':'+mode,st=S.stars[k]||0,best=S.scores[k];
+ return `<button class="mode" type="button" data-launch="${key}|${mode}"><b>${M.name}</b><span class="stars" aria-label="${st} of 3 stars">${starStr(st)}</span><span>${mode==='elite'?(best?'Best: '+best+' star'+(best>1?'s':''):'Not tried yet'):(best!=null?'Best: '+best+(mode==='ten'?'/10':''):'Not tried yet')}</span></button>`;}
+function openHall(){if(!S)return;ensureBounties();closeDrawer();const tot=totalStars(),n=S.cleared.filter(Boolean).length;
+ const cards=REGIONS.map((reg,r)=>S.cleared[r]?`<div class="hall-region"><div class="hall-name"><span class="swatch" style="--rc:${reg.color}"></span>${reg.name}<span class="small">${TOPIC_NAMES[reg.topic]}</span></div><div class="modes">${['time','survive','ten','elite'].map(m=>modeBtn(r,m)).join('')}</div></div>`
+  :`<div class="hall-region off"><div class="hall-name"><span class="swatch" style="--rc:${reg.color}"></span>${reg.name}<span class="small">Locked</span></div><p class="small">Defeat ${reg.boss} on the map to unlock these challenges.</p></div>`).join('');
+ const mix=n>=2?`<div class="hall-region"><div class="hall-name"><span class="swatch" style="--rc:var(--ink)"></span>Mixed Arena<span class="small">Every cleared topic</span></div><div class="modes">${['time','survive','ten'].map(m=>modeBtn('mix',m)).join('')}</div></div>`
+  :`<div class="hall-region off"><div class="hall-name"><span class="swatch" style="--rc:var(--ink)"></span>Mixed Arena<span class="small">Locked</span></div><p class="small">Clear two regions to mix their topics together.</p></div>`;
+ openDialog(head('Challenge Hall','Replay regions and earn stars',true)+`<div class="hall">
+ <div class="hall-top"><span><span class="stars">★</span> <b class="num">${tot} of ${MAX_STARS}</b> stars</span><span class="small">Each new star pays 20 gold.</span></div>
+ <h4>Bounty board</h4>${S.bounties.map((b,i)=>`<div class="bounty ${b.done?'done':''}"><div><div class="bounty-text">${b.text}</div><div class="small">Reward: ${b.gold} gold and ${b.xp} XP</div></div>${b.done?`<button class="btn sm primary" type="button" data-claim="${i}">Claim</button>`:`<span class="num small">${Math.min(b.prog,b.goal)}/${b.goal}</span>`}<div class="bar" style="grid-column:1/-1"><i style="width:${100*Math.min(1,b.prog/b.goal)}%"></i></div></div>`).join('')}
+ <h4>Region challenges</h4>${cards}${mix}${travelHTML(-1)}
+ <button class="btn" id="done" type="button">Back to the map</button></div>`);
+ document.querySelectorAll('[data-launch]').forEach(b=>b.onclick=()=>{const [k,m]=b.dataset.launch.split('|');launch(k,m);});
+ document.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{const x=S.bounties[+b.dataset.claim];if(!x||!x.done)return;S.hero.gold+=x.gold;addXP(x.xp);S.bountiesDone++;if(S.bountiesDone>=5)grant('bounty5');addLog(`Bounty claimed: ${x.text}.`);S.bounties.splice(+b.dataset.claim,1);ensureBounties();save();renderHUD();toast('Bounty claimed',`+${x.gold} gold`);openHall();});
+ wireTravel();$('done').onclick=closeDialog;}
+function newBounty(){const ts=TOPICS.filter((_,i)=>i===0||S.cleared[i-1]),opts=['topic','topic','combo','win','timed','chest'];if(S.cleared.some(Boolean))opts.push('star','star');
+ for(let t=0;t<30;t++){const k=P(opts);let b;
+  if(k==='topic'){const tp=P(ts),g=R(8,15);b={k,topic:tp,goal:g,text:`Answer ${g} ${TOPIC_NAMES[tp].toLowerCase()} questions correctly`};}
+  else if(k==='combo'){const g=P([5,6,8,10]);b={k,goal:g,text:`Reach a combo of ${g}`};}
+  else if(k==='win'){const g=R(3,5);b={k,goal:g,text:`Win ${g} battles`};}
+  else if(k==='timed'){const g=R(6,10);b={k,goal:g,text:`Score ${g} in one Blitz or Time Attack`};}
+  else if(k==='chest')b={k,goal:2,text:'Open 2 treasure chests'};
+  else{const g=R(2,3);b={k,goal:g,text:`Earn ${g} new challenge stars`};}
+  if(S.bounties.some(x=>x.text===b.text||(x.k===b.k&&(k!=='topic'||x.topic===b.topic))))continue;
+  return Object.assign(b,{prog:0,done:false,gold:R(5,8)*5,xp:20});}
+ return {k:'win',goal:3,text:'Win 3 battles',prog:0,done:false,gold:30,xp:20};}
+function ensureBounties(){if(!S)return;S.bounties=S.bounties||[];while(S.bounties.length<3)S.bounties.push(newBounty());}
+function bump(k,n,topic,max){if(!S||!S.bounties)return;S.bounties.forEach(b=>{if(b.done||b.k!==k||(b.topic&&b.topic!==topic))return;b.prog=max?Math.max(b.prog,n):b.prog+n;if(b.prog>=b.goal){b.done=true;toast('Bounty complete',b.text+'. Claim it in the Challenge Hall.');}});}
+
+/* ---------------- Menu drawer ---------------- */
+function setTab(t){document.querySelectorAll('#drawer .panel').forEach(p=>p.hidden=p.id!==t);document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tab===t)));}
+function openDrawer(){if(!S)return;renderSheet();$('drawer').hidden=false;$('veil').hidden=false;$('menuBtn').setAttribute('aria-expanded','true');$('drawerClose').focus();}
+function closeDrawer(){$('drawer').hidden=true;$('veil').hidden=true;$('menuBtn').setAttribute('aria-expanded','false');}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+$('menuBtn').onclick=openDrawer;$('drawerClose').onclick=closeDrawer;$('veil').onclick=closeDrawer;
+$('hallBtn').onclick=()=>{if(!S||busy||!$('modal').hidden)return;openHall();};
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('drawer').hidden)closeDrawer();else if(!$('modal').hidden)tryClose();});
+$('dlgX').onclick=tryClose;
+setTab('heroPanel');
+
+/* ---------------- Secrets & cheat codes ---------------- */
+const SECRETS={
+ north:['True North','Which way is north? Ask it three times.'],
+ pi:['Pi Day','The kingdom was founded in an irrational year.'],
+ mushroom:['Golden Mushroom','Something golden grows in the forest.'],
+ tickle:['Monster Tickler','Monsters are very ticklish.'],
+ answer42:['The Answer','Find the answer to life, the universe and everything.'],
+ sixes:['Hat-trick','Fortune favours three sixes in a row.'],
+ famous:['Famous Mathematician','Some names are famous in maths.'],
+ konami:['Retro Gamer','An old gamer’s code: up, up, down, down…'],
+ piTime:['Pi O’Clock','Play at a very irrational time of day.'],
+ cheater:['Rule Bender','Rules are made to be bent.']
+};
+const FAMOUS=[['pythagoras','Pythagoras! The Right-Angle Titan is nervous already.'],['euclid','Euclid, father of geometry, joins the quest.'],['archimedes','Archimedes! Eureka!'],['newton','Sir Isaac Newton has arrived. Mind the apples.'],['lovelace','Ada Lovelace, the first programmer, is ready.'],['turing','Alan Turing, code-breaker extraordinaire.'],['hypatia','Hypatia of Alexandria takes up the challenge.'],['fibonacci','Fibonacci! 1, 1, 2, 3, 5, 8… adventure!'],['gauss','Gauss, prince of mathematicians, sets out.'],['noether','Emmy Noether, master of algebra, arrives.'],['katherine johnson','Katherine Johnson, whose maths sent rockets to the Moon.']];
+const TOGGLES={god:'Infinity mode (no damage)',onehit:'Divide by zero (one-hit wins)',big:'Big head',rainbow:'Rainbow hero',loaded:'Loaded dice'};
+const cheatsOn=()=>!!S&&Object.values(S.cheats||{}).some(Boolean);
+function secret(id){if(!S||S.secrets[id])return;S.secrets[id]=true;S.hero.gold+=25;addLog(`Found a secret: ${SECRETS[id][0]}.`);save();toast('Secret found!',`${SECRETS[id][0]} · +25 gold (${Object.keys(S.secrets).length}/${Object.keys(SECRETS).length})`);renderHUD();renderSheet();}
+function checkPiTime(){const d=new Date();if(d.getHours()%12===3&&d.getMinutes()===14)secret('piTime');}
+function applyCode(raw){const c=String(raw).toUpperCase().replace(/[^A-Z0-9.]/g,'');const h=S.hero;let msg=null;
+ const toggle=k=>{S.cheats[k]=!S.cheats[k];return `${TOGGLES[k]} ${S.cheats[k]?'ON':'OFF'}.`;};
+ switch(c){
+  case 'GOLDENRATIO':case '1.618':h.gold+=162;msg='The golden ratio pays out: +162 gold.';break;
+  case 'PIDAY':case '3.14159':h.gold+=314;msg='Happy Pi Day: +314 gold.';break;
+  case 'ELIXIR':h.hp=h.maxHp;h.items.potion+=3;msg='Fully healed, plus 3 potions.';break;
+  case 'EUREKA':h.items.scroll+=5;msg='Eureka! +5 hint scrolls.';break;
+  case 'IRONCLAD':h.items.shield+=5;msg='+5 shield charms.';break;
+  case 'LEVELUP':addXP(xpNeed(h.lv)-h.xp);msg='You jump up a level.';break;
+  case 'INFINITY':msg=toggle('god');break;
+  case 'DIVIDEBYZERO':msg=toggle('onehit');break;
+  case 'BIGHEAD':msg=toggle('big');break;
+  case 'RAINBOW':msg=toggle('rainbow');break;
+  case 'LOADEDDICE':msg=toggle('loaded');break;
+  case 'OPENSESAME':S.cleared=S.cleared.map(()=>true);msg='Every gate swings open and the fog lifts.';break;
+  case 'WARP':save();closeDrawer();openWarp();msg='Choose where to warp.';break;
+  case 'NOCHEATS':S.cheats={};msg='All cheat toggles are off.';break;
+ }
+ if(!msg)return {ok:false,msg:'Nothing happens. That code isn’t recognised.'};
+ S.cheatUses=(S.cheatUses||0)+1;addLog(`Used cheat code ${c}.`);save();secret('cheater');renderAll();return {ok:true,msg};}
+function openWarp(){openDialog(head('Warp','Where to?',true)+`<p class="story">The ground shimmers. Pick a destination.</p><div class="row">${REGIONS.map((r,i)=>`<button class="btn sm" data-warp="${i*7}">${r.name}</button>`).join('')}<button class="btn sm" data-warp="42">Castle of Infinity</button></div><button class="btn" id="done">Stay put</button>`);
+ document.querySelectorAll('[data-warp]').forEach(b=>b.onclick=()=>{S.pos=+b.dataset.warp;addLog('Warped across Numeria.');save();closeDialog();toast('Warp','Whoosh!');});$('done').onclick=closeDialog;}
+function renderCodes(){const el=$('codesPanel');if(!el||!S)return;const on=Object.keys(TOGGLES).filter(k=>S.cheats[k]);const n=Object.keys(S.secrets).length;
+ el.innerHTML=`<h3>Secret codes</h3><p class="small">Know a code? Type it in.</p><form class="ans-row" id="codeF"><input class="ans" id="codeIn" autocomplete="off" spellcheck="false" placeholder="Enter code" aria-label="Cheat code" style="font-size:16px;text-transform:uppercase"><button class="btn primary" type="submit">Enter</button></form><p class="small" id="codeMsg" aria-live="polite"></p>
+ ${on.length?`<h3>Active cheats</h3><div class="cheat-row">${on.map(k=>`<button class="btn sm" type="button" data-off="${k}">${TOGGLES[k]} · turn off</button>`).join('')}</div>`:''}
+ <h3>Secrets · <span class="num">${n}/${Object.keys(SECRETS).length}</span></h3><ul class="secrets">${Object.entries(SECRETS).map(([k,v])=>S.secrets[k]?`<li class="found"><b>${v[0]}</b><span>Found</span></li>`:`<li><b>???</b><span>${v[1]}</span></li>`).join('')}</ul>`;
+ $('codeF').onsubmit=e=>{e.preventDefault();const v=$('codeIn').value;if(!v.trim())return;const r=applyCode(v);if($('codeMsg')){$('codeMsg').textContent=r.msg;$('codeIn').value='';$('codeIn').focus();}else toast('Code',r.msg);};
+ el.querySelectorAll('[data-off]').forEach(b=>b.onclick=()=>{S.cheats[b.dataset.off]=false;save();renderAll();});}
+// clicks on the map: compass, title plate, golden mushroom
+let northClicks=0,plateClicks=0;
+$('map').addEventListener('click',e=>{if(!S)return;
+ if(e.target.closest('#compass')){northClicks++;if(northClicks===3){toast('True North','The needle spins… and points straight at the treasure in your heart.');secret('north');}}
+ if(e.target.closest('#plate')){plateClicks++;if(plateClicks===3){toast('π = 3.14159265358979323846…','Pi never ends and never repeats. The kingdom was founded in year π.');secret('pi');}}
+ if(e.target.closest('#mush')){toast('Golden Mushroom','You pick a glowing golden mushroom. It smells of fractions.');S.hero.items.potion++;secret('mushroom');renderMap();}});
+// Konami code
+const KONAMI=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];let kpos=0;
+document.addEventListener('keydown',e=>{const k=e.key.length===1?e.key.toLowerCase():e.key;if(k===KONAMI[kpos]){kpos++;if(kpos===KONAMI.length){kpos=0;if(S){S.cheats.rainbow=true;save();renderAll();toast('Retro mode!','Your hero glows in every colour.');secret('konami');}}}else kpos=k===KONAMI[0]?1:0;});
+
+/* ---------------- Hero creation ---------------- */
+function openStart(){let cls='knight',diff='standard';const av={type:'knight',bg:CLASSES.knight.color,skin:SKINS[1]};
+ openDialog(`<div class="dlg-head calm"><span class="eyebrow">A new adventure</span><h3>Create your hero</h3></div><p class="story">Six regions stand between you and the Castle of Infinity. Every monster, lock and trap is beaten with maths.</p>
+ <form id="startF" style="display:flex;flex-direction:column;gap:14px"><label class="field" for="heroName">Hero name<input id="heroName" maxlength="18" autocomplete="off" placeholder="e.g. Amara the Brave" aria-describedby="nameErr"></label><p class="name-err" id="nameErr" role="alert" hidden>Type a name for your hero first, then press Begin.</p>
+ <div class="field">Choose your look<div id="pickerBox"></div></div>
+ <div class="field">Choose a class<div class="classes">${Object.entries(CLASSES).map(([k,c])=>`<button type="button" class="cls" data-cls="${k}" aria-pressed="${k===cls}"><b>${c.name}</b><span class="num">HP ${c.hp} · Attack ${c.dmg}</span>${c.blurb}</button>`).join('')}</div></div>
+ <div class="field">Difficulty<div class="seg">${[['gentle','Gentle'],['standard','Standard'],['exam','Exam ready']].map(([k,n])=>`<button type="button" data-diff="${k}" aria-pressed="${k===diff}">${n}</button>`).join('')}</div><span class="small">Questions follow GCSE Foundation topics. You can change difficulty later.</span></div>
+ <button class="btn primary" type="submit">Begin the quest</button></form>`,'locked');
+ document.querySelectorAll('[data-cls]').forEach(b=>b.onclick=()=>{cls=b.dataset.cls;document.querySelectorAll('[data-cls]').forEach(x=>x.setAttribute('aria-pressed',x===b));});
+ document.querySelectorAll('[data-diff]').forEach(b=>b.onclick=()=>{diff=b.dataset.diff;document.querySelectorAll('[data-diff]').forEach(x=>x.setAttribute('aria-pressed',x===b));});
+ setTimeout(()=>$('heroName').focus(),50);const redraw=mountPicker($('pickerBox'),av,()=>esc(($('heroName').value.trim()[0]||'H').toUpperCase()));$('heroName').oninput=()=>{if(av.type==='initial')redraw();};
+ $('heroName').addEventListener('input',()=>{$('nameErr').hidden=true;$('heroName').classList.remove('bad');});
+ $('startF').noValidate=true;$('startF').onsubmit=e=>{e.preventDefault();const n=$('heroName').value.trim();if(!n){$('nameErr').hidden=false;const hn=$('heroName');hn.classList.remove('bad');void hn.offsetWidth;hn.classList.add('bad');hn.focus();return;}try{S=freshState(n,cls,diff);S.hero.av={...av};ensureBounties();const fam=FAMOUS.find(f=>n.toLowerCase().includes(f[0]));addLog(`${esc(n)} the ${CLASSES[cls].name} sets out from Number Meadows.`);save();closeDialog();toast('Your quest begins','Roll the die to move along the path.');if(fam){['potion','scroll','shield'].forEach(k=>S.hero.items[k]++);toast('A famous name!',fam[1]+' You receive one of every item.');secret('famous');}checkPiTime();}catch(err){showErr(err);}};}
+
+/* ---------------- Boot ---------------- */
+function start(data){renderLegend();S=(data&&data.S&&data.S.hero)?data.S:load();
+ if(!S){S=freshState('Hero','knight','standard');renderAll();S=null;openStart();return;}upgrade(S);ensureBounties();renderAll();checkPiTime();}
+try{window.claude?.hot?.snapshot?.(()=>({S}));}catch(e){}
+if(window.claude?.hot?.ready)window.claude.hot.ready(start);else start(window.claude?.hot?.data??{});
+</script>
+</body>
+</html>
